@@ -31,10 +31,10 @@ class Wyrmprint:
 		params = ()
 		fullQuery = Wyrmprint.wyrmprintSearchQueryText
 		if ability != None:
-			fullQuery += "AND WA.name = ? COLLATe NOCASE "
+			fullQuery += "AND A.name LIKE '%' || ? || '%' COLLATE NOCASE "
 			params += (ability,)
 		if rarity != None:
-			fullQuery += "AND W.rarity = ? COLLATE NOCASE "
+			fullQuery += "AND W.rarity >= ? "
 			params += (rarity,)
 		if level != None:
 			fullQuery += "AND WA.level = ? "
@@ -98,8 +98,9 @@ class Wyrmprint:
 	'''
 	wyrmprintSearchQueryText = '''
 	SELECT DISTINCT W.Name
-		, W.Level
+		, WA.Level
 	FROM Wyrmprints W
 		INNER JOIN WyrmprintAbilities WA ON WA.WyrmprintID = W.WyrmprintID
+		INNER JOIN Abilities A ON A.AbilityID = WA.AbilityID
 	WHERE 1=1 
 	'''

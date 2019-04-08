@@ -27,7 +27,7 @@ from models.skill import Skill
 
 class Adventurer:
 	@staticmethod
-	def findAdventurers(element=None, weapon=None, skill=None, ability=None):
+	def findAdventurers(element=None, weapon=None, skill=None, ability=None, rarity=None):
 		adventurers = []
 		params = ()
 		fullQuery = Adventurer.adventurerSearchQueryText
@@ -38,11 +38,14 @@ class Adventurer:
 			fullQuery += "AND WT.name = ? COLLATE NOCASE "
 			params += (weapon,)
 		if skill != None:
-			fullQuery += "AND S.name = ? COLLATE NOCASE "
+			fullQuery += "AND S.name LIKE '%' || ? || '%' COLLATE NOCASE "
 			params += (skill,)
 		if ability != None:
-			fullQuery += "AND Ab.name = ? COLLATE NOCASE "
+			fullQuery += "AND Ab.name LIKE '%' || ? || '%' COLLATE NOCASE "
 			params += (ability,)
+		if rarity != None:
+			fullQuery += "AND A.rarity >= ? "
+			params += (rarity,)
 		if len(params) == 0:
 			return adventurers
 		with Database("master.db") as db:

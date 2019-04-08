@@ -35,10 +35,10 @@ class Dragon:
 			fullQuery += "AND ET.name = ? COLLATE NOCASE "
 			params += (element,)
 		if skill != None:
-			fullQuery += "AND S.name = ? COLLATE NOCASE "
+			fullQuery += "AND S.name LIKE '%' || ? || '%' COLLATE NOCASE "
 			params += (skill,)
 		if ability != None:
-			fullQuery += "AND A.name = ? COLLATE NOCASE "
+			fullQuery += "AND A.name LIKE '%' || ? || '%' COLLATE NOCASE "
 			params += (ability,)
 		if rarity != None:
 			fullQuery += "AND D.rarity >= ? "

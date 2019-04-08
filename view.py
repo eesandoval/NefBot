@@ -79,7 +79,7 @@ async def showAdventurer(adventurer):
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Unit Type", value=getEmojiElement(adventurer.elementtype) + getEmojiWeapon(adventurer.weapontype) + getEmojiUnit(adventurer.unittype), inline=True)
 	e.add_field(name="Rarity", value=getEmojiRarity(adventurer.rarity), inline=True)
-	e.add_field(name="Max HP/Max STR", value=adventurer.maxhp + "/" + adventurer.maxstr, inline=True)
+	e.add_field(name="Max HP/Max STR", value="{0}/{1}".format(adventurer.maxhp, adventurer.maxstr), inline=True)
 	e.add_field(name="Max Co-Op Ability", value=adventurer.maxcoop, inline=True)
 	e.add_field(name="Defense", value=adventurer.defense, inline=True)
 	e.add_field(name="Release Date", value=getHumanStringDate(adventurer.releasedate), inline=True)
@@ -102,7 +102,7 @@ async def showWyrmprint(wyrmprint):
 	portraitURL = PICTURE_SERVER + "wyrmprints/portraits/{0}.png".format("%20".join(wyrmprint.name.split()))
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Rarity", value=getEmojiRarity(wyrmprint.rarity), inline=True)
-	e.add_field(name="Max HP/Max STR", value=wyrmprint.maxhp + "/" + wyrmprint.maxstr, inline=True)
+	e.add_field(name="Max HP/Max STR", value="{0}/{1}".format(wyrmprint.maxhp, wyrmprint.maxstr), inline=True)
 	e.add_field(name="Release Date", value=getHumanStringDate(wyrmprint.releasedate), inline=True)
 	for ability in wyrmprint.abilities:
 		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
@@ -119,7 +119,7 @@ async def showDragon(dragon):
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Element", value=getEmojiElement(dragon.element), inline=True)
 	e.add_field(name="Rarity", value=getEmojiRarity(dragon.rarity), inline=True)
-	e.add_field(name="Max HP/Max STR", value=dragon.maxhp + "/" + dragon.maxstr, inline=True)
+	e.add_field(name="Max HP/Max STR", value="{0}/{1}".format(dragon.maxhp, dragon.maxstr), inline=True)
 	e.add_field(name="Release Date", value=getHumanStringDate(dragon.releasedate), inline=True)
 	for skill in dragon.skills:
 		e.add_field(name="Skill: " + skill.name, value=skill.description, inline=False)
@@ -153,7 +153,7 @@ async def showException(message):
 
 def determineCriteria(message):
 	lexer = shlex(message, posix=True)
-	lexer.whitespace = ','
+	lexer.whitespace = ' '
 	lexer.wordchars += '='
 	return dict(word.split('=', maxsplit=1) for word in lexer)
 

@@ -58,6 +58,7 @@ def queryAdventurers(criteria):
     weapon = None
     skill = None 
     ability = None 
+    rarity = None 
     if "element" in criteria:
         element = criteria["element"]
     if "weapon" in criteria:
@@ -66,9 +67,11 @@ def queryAdventurers(criteria):
         skill = criteria["skill"]
     if "ability" in criteria:
         ability = criteria["ability"]
-    if element == None and skill == None and weapon == None and ability == None:
+    if "rarity" in criteria:
+        rarity = criteria["rarity"]
+    if element == None and skill == None and weapon == None and ability == None and rarity == None:
         return []
-    return Adventurer.findAdventurers(element, weapon, skill, ability)
+    return Adventurer.findAdventurers(element, weapon, skill, ability, rarity)
 
 def queryWyrmprints(criteria):
     ability = None
