@@ -21,8 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from model import Adventurer
-from model import Wyrmprint
+from models.adventurer import Adventurer
+from models.wyrmprint import Wyrmprint
+from models.dragon import Dragon
 import controller
 import discord 
 from shlex import shlex
@@ -54,7 +55,7 @@ async def on_message(message):
 	elif messageCommand.startswith(COMMAND_START + "wyr"):
 		await controller.processWyrmprint(messageContent)
 	elif messageCommand.startswith(COMMAND_START + "dra"):
-		await client.send_message(channel, "Dragon searching is not available yet.")
+		await controller.processDragon(messageContent)
 	elif messageCommand.startswith(COMMAND_START + "query"):
 		await controller.query(determineCriteria(messageContent))
 	elif messageCommand.startswith(COMMAND_START + "exit") and (AUTHORIZED_IDs == [] or message.author.id in AUTHORIZED_IDs):
@@ -78,6 +79,8 @@ async def showAdventurer(adventurer):
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Unit Type", value=getEmojiElement(adventurer.elementtype) + getEmojiWeapon(adventurer.weapontype) + getEmojiUnit(adventurer.unittype), inline=True)
 	e.add_field(name="Rarity", value=getEmojiRarity(adventurer.rarity), inline=True)
+	e.add_field(name="Max HP/Max STR", value=adventurer.maxhp + "/" + adventurer.maxstr, inline=True)
+	e.add_field(name="Max Co-Op Ability", value=adventurer.maxcoop, inline=True)
 	e.add_field(name="Defense", value=adventurer.defense, inline=True)
 	e.add_field(name="Release Date", value=getHumanStringDate(adventurer.releasedate), inline=True)
 	for skill in adventurer.skills:
@@ -94,20 +97,39 @@ async def showAdventurerNotFound(name):
 	await client.send_message(channel, "Adventurer {0} not found".format(name))
 
 @client.event 
-async def showWyrmprint(wyrmprint, level):
+async def showWyrmprint(wyrmprint):
 	e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name)
 	portraitURL = PICTURE_SERVER + "wyrmprints/portraits/{0}.png".format("%20".join(wyrmprint.name.split()))
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Rarity", value=getEmojiRarity(wyrmprint.rarity), inline=True)
+	e.add_field(name="Max HP/Max STR", value=wyrmprint.maxhp + "/" + wyrmprint.maxstr, inline=True)
 	e.add_field(name="Release Date", value=getHumanStringDate(wyrmprint.releasedate), inline=True)
 	for ability in wyrmprint.abilities:
-		if int(ability.level) == int(level):
-			e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
+		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
 	await client.send_message(channel, embed=e)
 
 @client.event 
 async def showWyrmprintNotFound(name):
 	await client.send_message(channel, "Wyrmprint {0} not found".format(name))
+
+@client.event 
+async def showDragon(dragon):
+	e = discord.Embed(title=dragon.name, desc=dragon.name)
+	portraitURL = PICTURE_SERVER + "dragons/portraits/{0}.png".format("%20".join(dragon.name))
+	e.set_thumbnail(url=portraitURL)
+	e.add_field(name="Element", value=getEmojiElement(dragon.element), inline=True)
+	e.add_field(name="Rarity", value=getEmojiRarity(dragon.rarity), inline=True)
+	e.add_field(name="Max HP/Max STR", value=dragon.maxhp + "/" + dragon.maxstr, inline=True)
+	e.add_field(name="Release Date", value=getHumanStringDate(dragon.releasedate), inline=True)
+	for skill in dragon.skills:
+		e.add_field(name="Skill: " + skill.name, value=skill.description, inline=False)
+	for ability in dragon.abilities:	
+		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
+	await client.send_message(channel, embed=e)
+	
+@client.event 
+async def showDragonNotFound(name):
+	await client.send_message(channel, "Dragon {0} not found".format(name))
 
 @client.event
 async def showInvalidName():
@@ -120,6 +142,10 @@ async def showMissingCriteria(missingCriteria):
 @client.event 
 async def showNoResultsFound():
 	await client.send_message(channel, "No results found for the given criteria")
+
+@client.event 
+async def showUnknownCriteria(criteriaName, criteria):
+	await client.send_message(channel, "Unknown criteria: name '{0}', value '{1}'".format(criteriaName, criteria))
 
 @client.event 
 async def showException(message):

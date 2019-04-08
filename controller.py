@@ -22,20 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 import view
-from model import Adventurer
-from model import Wyrmprint
-
-async def processAdventurer(name):
-    try:
-        if name == None or name == "":
-            await view.showInvalidName()
-        adventurer = Adventurer(name)
-        if adventurer == None:
-            await view.showAdventurerNotFound(name)
-        else:
-            await view.showAdventurer(adventurer)
-    except Exception as e:
-        await view.showException("Failed to process adventurer with the following error:{0}".format(str(e)))
+from models.adventurer import Adventurer
+from models.wyrmprint import Wyrmprint
+from models.dragon import Dragon
 
 async def query(criteria):
     try:
@@ -47,6 +36,20 @@ async def query(criteria):
                 await view.showNoResultsFound()
             for adventurer in adventurers:
                 await view.showAdventurer(adventurer)
+        elif criteria["type"].startswith("wyr"):
+            wyrmprints = queryWyrmprints(criteria)
+            if wyrmprints == None or wyrmprints == []:
+                await view.showNoResultsFound()
+            for wyrmprint in wyrmprints:
+                await view.showWyrmprint(wyrmprint)
+        elif criteria["type"].startswith("dra"):
+            dragons = queryDragons(criteria)
+            if dragons == None or dragons == []:
+                await view.showNoResultsFound()
+            for dragon in dragons:
+                await view.showDragon(dragon)
+        else:
+            await view.showUnknownCriteria("type", criteria["type"])
     except Exception as e:
         await view.showException("Failed to process query with the following error:{0}".format(str(e)))
 
@@ -67,22 +70,89 @@ def queryAdventurers(criteria):
         return []
     return Adventurer.findAdventurers(element, weapon, skill, ability)
 
-async def processWyrmprint(name):
+def queryWyrmprints(criteria):
+    ability = None
+    rarity = None
+    level = 2
+    if "ability" in criteria:
+        ability = criteria["ability"]
+    if "rarity" in criteria:
+        rarity = criteria["rarity"]
+    if "level" in criteria:
+        level = criteria["level"]
+    if ability == None and rarity == None:
+        return []
+    return Wyrmprint.findWyrmprints(ability, rarity, level)
+
+def queryDragons(criteria):
+    element = None
+    skill = None 
+    ability = None 
+    rarity = None 
+    level = 2
+    if "element" in criteria:
+        element = criteria["element"]
+    if "skill" in criteria:
+        skill = criteria["skill"]
+    if "ability" in criteria:
+        ability = criteria["ability"]
+    if "rarity" in criteria:
+        rarity = criteria["rarity"]
+    if "level" in criteria:
+        level = criteria["level"]
+    if element == None and skill == None and ability == None and rarity == None:
+        return []
+    return Dragon.findDragons(element, skill, ability, rarity, level)
+
+async def processAdventurer(name):
     try:
         if name == None or name == "":
             await view.showInvalidName()
-        name = name.strip()
-        level = 2
-        if name[-1].isdigit():
-            level = int(name[-1])
-            name = name[0:len(name) - 1].strip()
-        wyrmprint = Wyrmprint(name)
+        adventurer = Adventurer(name)
+        if adventurer == None:
+            await view.showAdventurerNotFound(name)
+        else:
+            await view.showAdventurer(adventurer)
+    except Exception as e:
+        await view.showException("Failed to process adventurer with the following error:{0}".format(str(e)))
+
+async def processWyrmprint(message):
+    try:
+        if message == None or message == "":
+            await view.showInvalidName()
+        nameAndLevel = getNameAndLevel(message)
+        name = nameAndLevel["name"]
+        level = nameAndLevel["level"]
+        wyrmprint = Wyrmprint(name, level)
         if wyrmprint == None:
             await view.showWyrmprintNotFound(name)
         else:
-            await view.showWyrmprint(wyrmprint, level)
+            await view.showWyrmprint(wyrmprint)
     except Exception as e:
         await view.showException("Failed to process wyrmprint with the following error:{0}".format(str(e)))
+
+async def processDragon(message):
+    try:
+        if message == None or message == "":
+            await view.showInvalidName()
+        nameAndLevel = getNameAndLevel(message)
+        name = nameAndLevel["name"]
+        level = nameAndLevel["level"]
+        dragon = Dragon(name, level)
+        if dragon == None:
+            await view.showDragonNotFound(name)
+        else:
+            await view.showDragon(dragon)
+    except Exception as e:
+        await view.showException("Failed to process dragon with the following error:{0}".format(str(e)))
+
+def getNameAndLevel(message):
+    name = message.strip()
+    level = 2
+    if name[-1].isdigit():
+        level = int(name[-1])
+        name = name[0:len(name) - 1].strip()
+    return {"name":name, "level":level}
 
 def start():
     view.startDiscordBot()
