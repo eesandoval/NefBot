@@ -59,7 +59,7 @@ class Wyrmprint:
 
 	def _getWyrmprint(self, db):
 		result = db.query(Wyrmprint.wyrmprintQueryText, (self.name,))
-		if result == None:
+		if result == None or result == []:
 			return False
 		result = result[0]
 		self.wyrmprintid = result[0]
@@ -84,7 +84,9 @@ class Wyrmprint:
 		, W.ReleaseDate 
 		, W.Name
 	FROM Wyrmprints W
-	WHERE W.Name = ? COLLATE NOCASE
+	WHERE W.Name LIKE '%' || ? || '%' COLLATE NOCASE
+	ORDER BY W.ReleaseDate DESC
+	LIMIT 1
 	'''
 	abilitiesQueryText = '''
 	SELECT A.Name 

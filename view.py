@@ -117,12 +117,15 @@ async def showDragon(dragon):
 	e = discord.Embed(title=dragon.name, desc=dragon.name)
 	portraitURL = PICTURE_SERVER + "dragons/portraits/{0}.png".format("%20".join(dragon.name))
 	e.set_thumbnail(url=portraitURL)
-	e.add_field(name="Element", value=getEmojiElement(dragon.element), inline=True)
+	e.add_field(name="Element", value=getEmojiElement(dragon.elementtype), inline=True)
 	e.add_field(name="Rarity", value=getEmojiRarity(dragon.rarity), inline=True)
 	e.add_field(name="Max HP/Max STR", value="{0}/{1}".format(dragon.maxhp, dragon.maxstr), inline=True)
 	e.add_field(name="Release Date", value=getHumanStringDate(dragon.releasedate), inline=True)
 	for skill in dragon.skills:
-		e.add_field(name="Skill: " + skill.name, value=skill.description, inline=False)
+		if dragon.level == 1:
+			e.add_field(name="Skill: " + skill.name, value=skill.descriptionlevel1, inline=False)
+		else: 
+			e.add_field(name="Skill: " + skill.name, value=skill.descriptionlevel2, inline=False)
 	for ability in dragon.abilities:	
 		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
 	await client.send_message(channel, embed=e)

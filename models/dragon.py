@@ -44,8 +44,7 @@ class Dragon:
 			fullQuery += "AND D.rarity >= ? "
 			params += (rarity,)
 		if level != None:
-			fullQuery += "AND DS.level = ? AND DA.level = ? "
-			params += (level,)
+			fullQuery += "AND DA.level = ? "
 			params += (level,)
 		if len(params) == 0:
 			return dragons 
@@ -65,10 +64,11 @@ class Dragon:
 			else:
 				self._getSkills(db, level)
 				self._getAbilities(db, level)
+				self.level = level
 
 	def _getDragon(self, db):
 		result = db.query(Dragon.dragonQueryText, (self.name,))
-		if result == None:
+		if result == None or result == []:
 			return False
 		result = result[0]
 		self.dragonid = result[0]
@@ -82,13 +82,13 @@ class Dragon:
 
 	def _getSkills(self, db, level):
 		self.skills = []
-		result = db.query(Dragon.skillsQueryText, (self.dragonid,level))
+		result = db.query(Dragon.skillsQueryText, (self.dragonid,))
 		for skill in map(Skill._make, result):
 			self.skills.append(skill)
 
 	def _getAbilities(self, db, level):
 		self.abilities = []
-		result = db.query(Dragon.abilitiesQueryText, (self.dragonid,level))
+		result = db.query(Dragon.abilitiesQueryText, (self.dragonid,level,))
 		for ability in map(Ability._make, result):
 			self.abilities.append(ability)
 
@@ -96,13 +96,15 @@ class Dragon:
 	SELECT D.DragonID
 		, ET.Name AS "ElementTypeName"
 		, D.Rarity
-		, D.MaxHP
-		, D.MaxSTR
+		, D.HP
+		, D.STR
 		, D.ReleaseDate
 		, D.Name 
 	FROM Dragons D
 		INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID 
-	WHERE D.Name = ? COLLATE NOCASE 
+	WHERE D.Name LIKE '%' || ? || '%' COLLATE NOCASE 
+	ORDER BY D.ReleaseDate DESC
+	LIMIT 1 
 	'''
 
 	abilitiesQueryText = '''
@@ -118,12 +120,14 @@ class Dragon:
 
 	skillsQueryText = '''
 	SELECT S.Name
-		, S.Description
+		, S.SPCost
+		, S.FrameTime
+		, S.DescriptionLevel1
+		, S.DescriptionLevel2
+		, S.DescriptionLevel3
 	FROM DragonSkills DS
 		INNER JOIN Skills S ON S.SkillID = DS.SkillID 
 	WHERE DS.DragonID = ?
-		AND DS.Level = ?
-	ORDER BY DS.Slot ASC, DS.Level ASC
 	'''
 
 	dragonSearchQueryText = '''

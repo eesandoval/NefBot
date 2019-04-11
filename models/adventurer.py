@@ -67,7 +67,7 @@ class Adventurer:
 
 	def _getAdventurer(self, db):
 		result = db.query(Adventurer.adventurerQueryText, (self.name,))
-		if result == None:
+		if result == None or result == []:
 			return False
 		result = result[0]
 		self.adventurerid = result[0]
@@ -113,7 +113,9 @@ class Adventurer:
 		INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
 		INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
 		INNER JOIN UnitTypes UT ON UT.UnitTypeID = A.UnitTypeID
-	WHERE A.Name = ? COLLATE NOCASE
+	WHERE A.Name LIKE '%' || ? || '%' COLLATE NOCASE
+	ORDER BY A.ReleaseDate DESC
+	LIMIT 1
 	'''
 	skillsQueryText = '''
 	SELECT S.Name 
