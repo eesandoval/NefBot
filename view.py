@@ -28,7 +28,20 @@ import controller
 import discord 
 from shlex import shlex
 from datetime import datetime
-from config import *
+from configparser import ConfigParser
+
+TOKEN = ""
+CURRENT_EVENT = ""
+PICTURE_SERVER = ""
+STREAM_URL = ""
+AUTHORIZED_IDs = []
+COMMAND_START = ""
+HELP_TEXT = ""
+ELEMENT_EMOJI = {}
+WEAPON_EMOJI = {}
+UNIT_EMOJI = {}
+RARITY_EMOJI = {}
+AUTHORIZED_IDs = []
 
 client = discord.Client()
 channel = None 
@@ -42,6 +55,25 @@ dragon_emojis = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
 def startDiscordBot():
 	client.run(TOKEN)
 
+async def exitDiscordBot():
+	await client.send_message(channel, "Shutting down")
+	await client.close()
+
+def setViewConfig():
+	global TOKEN, STREAM_URL, CURRENT_EVENT, COMMAND_START, ELEMENT_EMOJI, WEAPON_EMOJI, UNIT_EMOJI, RARITY_EMOJI, PICTURE_SERVER, HELP_TEXT, AUTHORIZED_IDs
+	config = ConfigParser()
+	config.read("config.ini")
+	TOKEN = config["Discord"]["Token"]
+	STREAM_URL = config["Discord"]["StreamURL"]
+	CURRENT_EVENT = config["Discord"]["CurrentEvent"]
+	COMMAND_START = config["Discord"]["CommandStart"]
+	ELEMENT_EMOJI = dict(config.items("ElementEmojis"))
+	WEAPON_EMOJI = dict(config.items("WeaponEmojis"))
+	UNIT_EMOJI = dict(config.items("UnitEmojis"))
+	RARITY_EMOJI = {int(k):v for k,v in config.items("RarityEmojis")}
+	PICTURE_SERVER = config["Other"]["PictureServer"]
+	HELP_TEXT = config["Other"]["HelpText"].format(COMMAND_START)
+	
 @client.event
 async def on_message(message):
 	if message.author == client.user:
@@ -65,12 +97,13 @@ async def on_message(message):
 	elif messageCommand.startswith(COMMAND_START + "query"):
 		await controller.query(determineCriteria(messageContent))
 	elif messageCommand.startswith(COMMAND_START + "exit") and (AUTHORIZED_IDs == [] or message.author.id in AUTHORIZED_IDs):
-		await client.send_message(channel, "Shutting down")
-		await client.close()
+		await exitDiscordBot()
 	elif messageCommand.startswith(COMMAND_START + "exit"):
 		await client.send_message(channel, "User {0} is not authorized to shut down this bot.".format(message.author.name))
 	elif messageCommand.startswith(COMMAND_START + "help"):
 		await client.send_message(channel, HELP_TEXT)
+	elif messageCommand.startswith(COMMAND_START + "update"):
+		await controller.update()
 	else:
 		await client.send_message(channel, "Command not understood. Type {0}help for options".format(COMMAND_START))
 
@@ -125,10 +158,7 @@ async def showDragon(dragon, message=None):
 	e.add_field(name="Max HP/Max STR", value="{0}/{1}".format(dragon.maxhp, dragon.maxstr), inline=True)
 	e.add_field(name="Release Date", value=getHumanStringDate(dragon.releasedate), inline=True)
 	for skill in dragon.skills:
-		if dragon.level == 1:
-			e.add_field(name="Skill: " + skill.name, value=skill.descriptionlevel1, inline=False)
-		else: 
-			e.add_field(name="Skill: " + skill.name, value=skill.descriptionlevel2, inline=False)
+		e.add_field(name="Skill: " + skill.name, value=skill.description, inline=False)
 	for ability in dragon.abilities:	
 		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
 	await showOrEditDragon(e, dragon, message)
@@ -246,3 +276,7 @@ async def showOrEditDragon(e, dragon, message=None):
 			await client.add_reaction(msg, emoji)
 	else:
 		msg = await client.edit_message(message, embed=e)
+
+@client.event 
+async def showCompletedUpdate():
+	await client.send_message(channel, "Update complete")

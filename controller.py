@@ -170,5 +170,10 @@ async def processDragonReaction(emoji, adventurer, message):
     elif emoji == "\U0001F509": # 2 unbinds
         await processDragon(adventurer.name, 2, message)
 
+async def update():
+    view.setViewConfig()
+    await view.showCompletedUpdate()
+
 def start():
+    view.setViewConfig()
     view.startDiscordBot()

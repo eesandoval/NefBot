@@ -72,7 +72,7 @@ class Dragon:
 			return False
 		result = result[0]
 		self.dragonid = result[0]
-		self.elementtype = result[1]
+		self.elementtype = result[1].lower()
 		self.rarity = result[2]
 		self.maxhp = result[3]
 		self.maxstr = result[4]
@@ -82,7 +82,7 @@ class Dragon:
 
 	def _getSkills(self, db, level):
 		self.skills = []
-		result = db.query(Dragon.skillsQueryText, (self.dragonid,))
+		result = db.query(Dragon.skillsQueryText, (self.dragonid,level,))
 		for skill in map(Skill._make, result):
 			self.skills.append(skill)
 
@@ -120,11 +120,9 @@ class Dragon:
 
 	skillsQueryText = '''
 	SELECT S.Name
+		, CASE ? WHEN 1 THEN S.DescriptionLevel1 ELSE S.DescriptionLevel2 END AS Description
 		, S.SPCost
 		, S.FrameTime
-		, S.DescriptionLevel1
-		, S.DescriptionLevel2
-		, S.DescriptionLevel3
 	FROM DragonSkills DS
 		INNER JOIN Skills S ON S.SkillID = DS.SkillID 
 	WHERE DS.DragonID = ?

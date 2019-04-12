@@ -73,14 +73,14 @@ class Adventurer:
 		self.adventurerid = result[0]
 		self.title = result[1]
 		self.rarity = result[2]
-		self.elementtype = result[3]
-		self.weapontype = result[4]
+		self.elementtype = result[3].lower()
+		self.weapontype = result[4].lower()
 		self.maxhp = result[5]
 		self.maxstr = result[6]
 		self.maxcoop = result[7]
 		self.defense = result[8]
 		self.releasedate = result[9]
-		self.unittype = result[10]
+		self.unittype = result[10].lower()
 		self.name = result[11]
 		return True
 
