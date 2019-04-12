@@ -56,14 +56,14 @@ class Adventurer:
 			adventurers.append(Adventurer(adventurer[0]))
 		return adventurers
 
-	def __init__(self, name):
+	def __init__(self, name, level=None):
 		self.name = name
 		with Database("master.db") as db: 
 			if not(self._getAdventurer(db)):
 				self = None
 			else:
-				self._getSkills(db)
-				self._getAbilities(db)
+				self._getSkills(db, level)
+				self._getAbilities(db, level)
 
 	def _getAdventurer(self, db):
 		result = db.query(Adventurer.adventurerQueryText, (self.name,))
@@ -84,14 +84,18 @@ class Adventurer:
 		self.name = result[11]
 		return True
 
-	def _getSkills(self, db):
+	def _getSkills(self, db, level=None):
 		self.skills = []
-		result = db.query(Adventurer.skillsQueryText, (self.adventurerid,))
+		if level == None:
+			level = 3
+		result = db.query(Adventurer.skillsQueryText, (level, self.adventurerid,))
 		for skill in map(Skill._make, result):
 			self.skills.append(skill)
 
-	def _getAbilities(self, db):
+	def _getAbilities(self, db, level=None):
 		self.abilities = []
+		if level == None:
+			level = 3
 		result = db.query(Adventurer.abilitiesQueryText, (self.adventurerid,))
 		for ability in map(Ability._make, result):
 			self.abilities.append(ability)
@@ -119,11 +123,9 @@ class Adventurer:
 	'''
 	skillsQueryText = '''
 	SELECT S.Name 
+		, CASE ? WHEN 1 THEN S.DescriptionLevel1 WHEN 2 THEN S.DescriptionLevel2 ELSE IFNULL(S.DescriptionLevel3, S.DescriptionLevel2) END AS Description
 		, S.SPCost 
 		, S.FrameTime 
-		, S.DescriptionLevel1
-		, S.DescriptionLevel2
-		, S.DescriptionLevel3
 	FROM AdventurerSkillS Ads
 		INNER JOIN Skills S ON S.SKillID = Ads.SkillID
 	WHERE Ads.AdventurerID = ?

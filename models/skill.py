@@ -1,4 +1,4 @@
 from collections import namedtuple
 
-class Skill(namedtuple("Skill", "name, spcost, frametime, descriptionlevel1, descriptionlevel2, descriptionlevel3")):
+class Skill(namedtuple("Skill", "name, description, spcost, frametime")):
 	pass

@@ -5,17 +5,19 @@ STREAM_URL = ""
 AUTHORIZED_IDs = []
 COMMAND_START = "^"
 HELP_TEXT = '''
-{0}adv - Search for an adventurer by providing the exact name
+{0}adv - Search for an adventurer by providing the name
 	Example usage: {0}adv Euden
-{0}wyr - Search for a wyrmprint by providing the exact name
+{0}wyr - Search for a wyrmprint by providing the name
 	Example usage: {0}wyr Glorious Tempest
-{0}dra - Search for a dragon by providing the exact name
+{0}dra - Search for a dragon by providing the name
 	Example usage: {0}dra Midgardsormr
 {0}query - Search for an adventurer, dragon, or wyrmprint given select criteria
 	Usage: {0}query type=(adv|dra|wyr) element=(Flame|Wind|Water|Light|Shadow) weapon=(Sword|Blade|Dagger|Axe|Lance|Bow|Staff|Wand) skill=(skillname) ability=(abilityname)
 	Note that weapon is only applicable to adventurers, and element is only applicable to adventurers and dragons!
 	Note that the skill name or ability name must be an exact (case insensitive). Wrap these around quotations
 	Example usage: {0}query type=adv element=Flame ability="Stun Res +100%"
+{0}update - Updates the bot, fetching the latest data from the configuration file. 
+	Note that the database does not get updated with this, it only updates information set in the config file.
 {0}exit - Shut down the bot
 '''.format(COMMAND_START)
 ELEMENT_EMOJI = {"Flame":"<:ele_flame:564111828716748813>", "Wind":"<:ele_wind:564117337431605258>", "Water":"<:ele_water:564117361708367883>", "Light":"<:ele_light:564117313792770084>", "Shadow":"<:ele_shadow:564117273221005318>"}

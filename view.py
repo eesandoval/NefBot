@@ -32,6 +32,12 @@ from config import *
 
 client = discord.Client()
 channel = None 
+active_adventurer_messages = {}
+active_wyrmprint_messages = {}
+active_dragon_messages = {}
+adventurer_emojis = ["\U0001F5BC", "\U0001F508", "\U0001F509", "\U0001F50A"]
+wyrmprint_emojis = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
+dragon_emojis = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
 
 def startDiscordBot():
 	client.run(TOKEN)
@@ -73,7 +79,7 @@ async def on_ready():
 	await client.change_presence(game=discord.Game(name=CURRENT_EVENT, url=STREAM_URL, type=1))
 
 @client.event 
-async def showAdventurer(adventurer):
+async def showAdventurer(adventurer, message=None):
 	e = discord.Embed(title=adventurer.name + " - " + adventurer.title, desc=adventurer.title)
 	portraitURL = PICTURE_SERVER + "adventurers/portraits/{0}.png".format("%20".join(adventurer.name.split()))
 	e.set_thumbnail(url=portraitURL)
@@ -84,20 +90,17 @@ async def showAdventurer(adventurer):
 	e.add_field(name="Defense", value=adventurer.defense, inline=True)
 	e.add_field(name="Release Date", value=getHumanStringDate(adventurer.releasedate), inline=True)
 	for skill in adventurer.skills:
-		if skill.descriptionlevel3 != None:
-			e.add_field(name="Skill: " + skill.name + " [SP Cost: {0}] ".format(skill.spcost) + "[Frame Time: {0}]".format(skill.frametime), value=skill.descriptionlevel3, inline=False)
-		else:
-	 		e.add_field(name="Skill: " + skill.name + " [SP Cost: {0}] ".format(skill.spcost) + "[Frame Time: {0}]".format(skill.frametime), value=skill.descriptionlevel2, inline=False)
+		e.add_field(name="Skill: {0} [SP Cost: {1}] [Frame Time: {2}]".format(skill.name, skill.spcost, skill.frametime), value=skill.description, inline=False)
 	for ability in adventurer.abilities:
 		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
-	await client.send_message(channel, embed=e)
+	await showOrEditAdventurer(e, adventurer, message)
 
 @client.event 
 async def showAdventurerNotFound(name):
 	await client.send_message(channel, "Adventurer {0} not found".format(name))
 
 @client.event 
-async def showWyrmprint(wyrmprint):
+async def showWyrmprint(wyrmprint, message=None):
 	e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name)
 	portraitURL = PICTURE_SERVER + "wyrmprints/portraits/{0}.png".format("%20".join(wyrmprint.name.split()))
 	e.set_thumbnail(url=portraitURL)
@@ -106,14 +109,14 @@ async def showWyrmprint(wyrmprint):
 	e.add_field(name="Release Date", value=getHumanStringDate(wyrmprint.releasedate), inline=True)
 	for ability in wyrmprint.abilities:
 		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
-	await client.send_message(channel, embed=e)
+	await showOrEditWyrmprint(e, wyrmprint, message)
 
 @client.event 
 async def showWyrmprintNotFound(name):
 	await client.send_message(channel, "Wyrmprint {0} not found".format(name))
 
 @client.event 
-async def showDragon(dragon):
+async def showDragon(dragon, message=None):
 	e = discord.Embed(title=dragon.name, desc=dragon.name)
 	portraitURL = PICTURE_SERVER + "dragons/portraits/{0}.png".format("%20".join(dragon.name))
 	e.set_thumbnail(url=portraitURL)
@@ -128,7 +131,7 @@ async def showDragon(dragon):
 			e.add_field(name="Skill: " + skill.name, value=skill.descriptionlevel2, inline=False)
 	for ability in dragon.abilities:	
 		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
-	await client.send_message(channel, embed=e)
+	await showOrEditDragon(e, dragon, message)
 	
 @client.event 
 async def showDragonNotFound(name):
@@ -151,7 +154,8 @@ async def showUnknownCriteria(criteriaName, criteria):
 	await client.send_message(channel, "Unknown criteria: name '{0}', value '{1}'".format(criteriaName, criteria))
 
 @client.event 
-async def showException(message):
+async def showException(message, traceMessage):
+	print(traceMessage)
 	await client.send_message(channel, message)
 
 def determineCriteria(message):
@@ -174,3 +178,71 @@ def getEmojiRarity(rarity):
 
 def getHumanStringDate(date):
 	return datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f").strftime("%B %d, %Y")
+
+@client.event
+async def on_reaction_add(reaction, user):
+	if reaction.message.id in active_adventurer_messages and reaction.emoji in adventurer_emojis and user != client.user:
+		await client.remove_reaction(reaction.message, reaction.emoji, user)
+		await controller.processAdventurerReaction(reaction.emoji, active_adventurer_messages[reaction.message.id], reaction.message)
+	
+	elif reaction.message.id in active_wyrmprint_messages and reaction.emoji in wyrmprint_emojis and user != client.user:
+		await client.remove_reaction(reaction.message, reaction.emoji, user)
+		await controller.processWyrmprintReaction(reaction.emoji, active_wyrmprint_messages[reaction.message.id], reaction.message)
+	
+	elif reaction.message.id in active_dragon_messages and reaction.emoji in dragon_emojis and user != client.user:
+		await client.remove_reaction(reaction.message, reaction.emoji, user)
+		await controller.processDragonReaction(reaction.emoji, active_dragon_messages[reaction.message.id], reaction.message)
+
+@client.event 
+async def showAdventurerFull(adventurer, message=None):
+	e = discord.Embed(title=adventurer.name + " - " + adventurer.title, desc=adventurer.title)
+	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
+	await showOrEditAdventurer(e, message)
+
+@client.event 
+async def showWyrmprintFull(wyrmprint, message=None):
+	e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name)
+	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
+	await showOrEditWyrmprint(e, message)
+
+@client.event 
+async def showDragonFull(dragon, message=None):
+	e = discord.Embed(title=dragon.name, desc=dragon.name)
+	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
+	await showOrEditDragon(e, message)
+
+@client.event 
+async def showOrEditAdventurer(e, adventurer, message=None):
+	if message == None:
+		global active_adventurer_messages
+		active_adventurer_messages = {}
+		msg = await client.send_message(channel, embed=e)
+		active_adventurer_messages[msg.id] = adventurer
+		for emoji in adventurer_emojis:
+			await client.add_reaction(msg, emoji)
+	else:
+		msg = await client.edit_message(message, embed=e)
+
+@client.event 
+async def showOrEditWyrmprint(e, wyrmprint, message=None):
+	if message == None:
+		global active_wyrmprint_messages
+		active_wyrmprint_messages = {}
+		msg = await client.send_message(channel, embed=e)
+		active_wyrmprint_messages[msg.id] = wyrmprint
+		for emoji in wyrmprint_emojis:
+			await client.add_reaction(msg, emoji)
+	else:
+		msg = await client.edit_message(message, embed=e)
+
+@client.event 
+async def showOrEditDragon(e, dragon, message=None):
+	if message == None:
+		global active_dragon_messages
+		active_dragon_messages = {}
+		msg = await client.send_message(channel, embed=e)
+		active_dragon_messages[msg.id] = dragon
+		for emoji in dragon_emojis:
+			await client.add_reaction(msg, emoji)
+	else:
+		msg = await client.edit_message(message, embed=e)

@@ -25,6 +25,7 @@ import view
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
+import traceback 
 
 async def query(criteria):
     try:
@@ -51,7 +52,7 @@ async def query(criteria):
         else:
             await view.showUnknownCriteria("type", criteria["type"])
     except Exception as e:
-        await view.showException("Failed to process query with the following error:{0}".format(str(e)))
+        await view.showException("Failed to process query with the following error:{0}".format(str(e)), traceback.format_exc())
 
 def queryAdventurers(criteria):
     element = None
@@ -107,55 +108,67 @@ def queryDragons(criteria):
         return []
     return Dragon.findDragons(element, skill, ability, rarity, level)
 
-async def processAdventurer(name):
+async def processAdventurer(name, level=None, message=None):
     try:
         if name == None or name == "":
             await view.showInvalidName()
-        adventurer = Adventurer(name)
+        adventurer = Adventurer(name, level)
         if adventurer == None:
             await view.showAdventurerNotFound(name)
         else:
-            await view.showAdventurer(adventurer)
+            await view.showAdventurer(adventurer, message)
     except Exception as e:
-        await view.showException("Failed to process adventurer with the following error:{0}".format(str(e)))
+        await view.showException("Failed to process adventurer with the following error:{0}".format(str(e)), traceback.format_exc())
 
-async def processWyrmprint(message):
+async def processWyrmprint(name, level=None, message=None):
     try:
-        if message == None or message == "":
+        if name == None or name == "":
             await view.showInvalidName()
-        nameAndLevel = getNameAndLevel(message)
-        name = nameAndLevel["name"]
-        level = nameAndLevel["level"]
-        wyrmprint = Wyrmprint(name, level)
+        wyrmprint = Wyrmprint(name, level or 2)
         if wyrmprint == None:
             await view.showWyrmprintNotFound(name)
         else:
-            await view.showWyrmprint(wyrmprint)
+            await view.showWyrmprint(wyrmprint, message)
     except Exception as e:
-        await view.showException("Failed to process wyrmprint with the following error:{0}".format(str(e)))
+        await view.showException("Failed to process wyrmprint with the following error:{0}".format(str(e)), traceback.format_exc())
 
-async def processDragon(message):
+async def processDragon(name, level=None, message=None):
     try:
-        if message == None or message == "":
+        if name == None or name == "":
             await view.showInvalidName()
-        nameAndLevel = getNameAndLevel(message)
-        name = nameAndLevel["name"]
-        level = nameAndLevel["level"]
-        dragon = Dragon(name, level)
+        dragon = Dragon(name, level or 2)
         if dragon == None:
             await view.showDragonNotFound(name)
         else:
-            await view.showDragon(dragon)
+            await view.showDragon(dragon, message)
     except Exception as e:
-        await view.showException("Failed to process dragon with the following error:{0}".format(str(e)))
+        await view.showException("Failed to process dragon with the following error:{0}".format(str(e)), traceback.format_exc())
 
-def getNameAndLevel(message):
-    name = message.strip()
-    level = 2
-    if name[-1].isdigit():
-        level = int(name[-1])
-        name = name[0:len(name) - 1].strip()
-    return {"name":name, "level":level}
+async def processAdventurerReaction(emoji, adventurer, message):
+    if emoji == "\U0001F5BC": # Full picture
+        await view.showAdventurerFull(adventurer, message)
+    elif emoji == "\U0001F508": # 1 unbind
+        await processAdventurer(adventurer.name, 1, message)
+    elif emoji == "\U0001F509": # 2 unbinds
+        await processAdventurer(adventurer.name, 2, message)
+    elif emoji == "\U0001F50A": # 3 unbinds 
+        await processAdventurer(adventurer.name, 3, message)
+
+async def processWyrmprintReaction(emoji, adventurer, message):
+    if emoji == "\U0001F5BC": # Full picture
+        await view.showWyrmprintFull(adventurer, message)
+    elif emoji == "\U0001F508": # 1 unbind
+        await processWyrmprint(adventurer.name, 1, message)
+    elif emoji == "\U0001F509": # 2 unbinds
+        await processWyrmprint(adventurer.name, 2, message)
+
+async def processDragonReaction(emoji, adventurer, message):
+    if emoji == "\U0001F5BC": # Full picture
+        await view.showDragonFull(adventurer, message)
+    elif emoji == "\U0001F508": # 1 unbind
+        await processDragon(adventurer.name, 1, message)
+    elif emoji == "\U0001F509": # 2 unbinds
+        await processDragon(adventurer.name, 2, message)
 
 def start():
     view.startDiscordBot()
