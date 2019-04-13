@@ -1,3 +1,4 @@
 config.ini
 assets/
 __pycache__/
+.directory
