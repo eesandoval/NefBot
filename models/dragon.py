@@ -82,7 +82,7 @@ class Dragon:
 
 	def _getSkills(self, db, level):
 		self.skills = []
-		result = db.query(Dragon.skillsQueryText, (self.dragonid,level,))
+		result = db.query(Dragon.skillsQueryText, (level,self.dragonid,))
 		for skill in map(Skill._make, result):
 			self.skills.append(skill)
 

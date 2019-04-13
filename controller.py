@@ -154,21 +154,21 @@ async def processAdventurerReaction(emoji, adventurer, message):
     elif emoji == "\U0001F50A": # 3 unbinds 
         await processAdventurer(adventurer.name, 3, message)
 
-async def processWyrmprintReaction(emoji, adventurer, message):
+async def processWyrmprintReaction(emoji, wyrmprint, message):
     if emoji == "\U0001F5BC": # Full picture
-        await view.showWyrmprintFull(adventurer, message)
+        await view.showWyrmprintFull(wyrmprint, message)
     elif emoji == "\U0001F508": # 1 unbind
-        await processWyrmprint(adventurer.name, 1, message)
+        await processWyrmprint(wyrmprint.name, 1, message)
     elif emoji == "\U0001F509": # 2 unbinds
-        await processWyrmprint(adventurer.name, 2, message)
+        await processWyrmprint(wyrmprint.name, 2, message)
 
-async def processDragonReaction(emoji, adventurer, message):
+async def processDragonReaction(emoji, dragon, message):
     if emoji == "\U0001F5BC": # Full picture
-        await view.showDragonFull(adventurer, message)
+        await view.showDragonFull(dragon, message)
     elif emoji == "\U0001F508": # 1 unbind
-        await processDragon(adventurer.name, 1, message)
+        await processDragon(dragon.name, 1, message)
     elif emoji == "\U0001F509": # 2 unbinds
-        await processDragon(adventurer.name, 2, message)
+        await processDragon(dragon.name, 2, message)
 
 async def update():
     view.setViewConfig()

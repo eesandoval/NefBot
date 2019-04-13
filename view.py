@@ -151,7 +151,7 @@ async def showWyrmprintNotFound(name):
 @client.event 
 async def showDragon(dragon, message=None):
 	e = discord.Embed(title=dragon.name, desc=dragon.name)
-	portraitURL = PICTURE_SERVER + "dragons/portraits/{0}.png".format("%20".join(dragon.name))
+	portraitURL = PICTURE_SERVER + "dragons/portraits/{0}.png".format("%20".join(dragon.name.split()))
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Element", value=getEmojiElement(dragon.elementtype), inline=True)
 	e.add_field(name="Rarity", value=getEmojiRarity(dragon.rarity), inline=True)
@@ -227,19 +227,19 @@ async def on_reaction_add(reaction, user):
 async def showAdventurerFull(adventurer, message=None):
 	e = discord.Embed(title=adventurer.name + " - " + adventurer.title, desc=adventurer.title)
 	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
-	await showOrEditAdventurer(e, message)
+	await showOrEditAdventurer(e, adventurer, message)
 
 @client.event 
 async def showWyrmprintFull(wyrmprint, message=None):
 	e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name)
 	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
-	await showOrEditWyrmprint(e, message)
+	await showOrEditWyrmprint(e, wyrmprint, message)
 
 @client.event 
 async def showDragonFull(dragon, message=None):
 	e = discord.Embed(title=dragon.name, desc=dragon.name)
 	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
-	await showOrEditDragon(e, message)
+	await showOrEditDragon(e, dragon, message)
 
 @client.event 
 async def showOrEditAdventurer(e, adventurer, message=None):
