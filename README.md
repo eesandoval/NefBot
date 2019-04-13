@@ -1,4 +1,5 @@
 # NefBot - A Discord Bot for Dragalia Lost
+[![Build Status](https://travis-ci.org/eesandoval/NefBot.svg?branch=master)](https://travis-ci.org/eesandoval/NefBot)
 1. [About](#about)
 2. [Installation](#installation)
 3. [Issues](#issues)
