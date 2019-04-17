@@ -26,59 +26,29 @@ from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
 import controller
 import discord 
-from shlex import shlex
-from datetime import datetime
-from configparser import ConfigParser
-
-TOKEN = ""
-CURRENT_EVENT = ""
-PICTURE_SERVER = ""
-STREAM_URL = ""
-AUTHORIZED_IDs = []
-COMMAND_START = ""
-HELP_TEXT = ""
-ELEMENT_EMOJI = {}
-WEAPON_EMOJI = {}
-UNIT_EMOJI = {}
-RARITY_EMOJI = {}
-AUTHORIZED_IDs = []
+from utils.config import Config 
+from utils.parsing import convert_ISO_date_to_string, convert_args_to_dict
 
 client = discord.Client()
 channel = None 
 active_adventurer_messages = {}
 active_wyrmprint_messages = {}
 active_dragon_messages = {}
-adventurer_emojis = ["\U0001F5BC", "\U0001F508", "\U0001F509", "\U0001F50A"]
-wyrmprint_emojis = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
-dragon_emojis = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
+config = Config("config.ini")
 
 def startDiscordBot():
-	client.run(TOKEN)
+	client.run(config.token)
 
 async def exitDiscordBot():
 	await client.send_message(channel, "Shutting down")
 	await client.close()
-
-def setViewConfig():
-	global TOKEN, STREAM_URL, CURRENT_EVENT, COMMAND_START, ELEMENT_EMOJI, WEAPON_EMOJI, UNIT_EMOJI, RARITY_EMOJI, PICTURE_SERVER, HELP_TEXT, AUTHORIZED_IDs
-	config = ConfigParser()
-	config.read("config.ini")
-	TOKEN = config["Discord"]["Token"]
-	STREAM_URL = config["Discord"]["StreamURL"]
-	CURRENT_EVENT = config["Discord"]["CurrentEvent"]
-	COMMAND_START = config["Discord"]["CommandStart"]
-	ELEMENT_EMOJI = dict(config.items("ElementEmojis"))
-	WEAPON_EMOJI = dict(config.items("WeaponEmojis"))
-	UNIT_EMOJI = dict(config.items("UnitEmojis"))
-	RARITY_EMOJI = {int(k):v for k,v in config.items("RarityEmojis")}
-	PICTURE_SERVER = config["Other"]["PictureServer"]
-	HELP_TEXT = config["Other"]["HelpText"].format(COMMAND_START)
 	
 @client.event
 async def on_message(message):
+	global config
 	if message.author == client.user:
 		return 
-	if message.content == None or message.content == "" or not(message.content[0] == COMMAND_START):
+	if message.content == None or message.content == "" or not(message.content[0] == config.command_start):
 		return
 	global channel
 	channel = message.channel 
@@ -88,40 +58,41 @@ async def on_message(message):
 	await client.send_typing(channel)
 	if len(receivedMessage) > 1:
 		messageContent = (' '.join(receivedMessage[1:])).strip()
-	if messageCommand.startswith(COMMAND_START + "adv"):
+	if messageCommand.startswith(config.command_start + "adv"):
 		await controller.processAdventurer(messageContent)
-	elif messageCommand.startswith(COMMAND_START + "wyr"):
+	elif messageCommand.startswith(config.command_start + "wyr"):
 		await controller.processWyrmprint(messageContent)
-	elif messageCommand.startswith(COMMAND_START + "dra"):
+	elif messageCommand.startswith(config.command_start + "dra"):
 		await controller.processDragon(messageContent)
-	elif messageCommand.startswith(COMMAND_START + "query"):
-		await controller.query(determineCriteria(messageContent))
-	elif messageCommand.startswith(COMMAND_START + "exit") and (AUTHORIZED_IDs == [] or message.author.id in AUTHORIZED_IDs):
+	elif messageCommand.startswith(config.command_start + "query"):
+		await controller.query(convert_args_to_dict(messageContent))
+	elif messageCommand.startswith(config.command_start + "exit") and (config.authorized_ids == [] or message.author.id in config.authorized_ids):
 		await exitDiscordBot()
-	elif messageCommand.startswith(COMMAND_START + "exit"):
+	elif messageCommand.startswith(config.command_start + "exit"):
 		await client.send_message(channel, "User {0} is not authorized to shut down this bot.".format(message.author.name))
-	elif messageCommand.startswith(COMMAND_START + "help"):
-		await client.send_message(channel, HELP_TEXT)
-	elif messageCommand.startswith(COMMAND_START + "update"):
-		await controller.update()
+	elif messageCommand.startswith(config.command_start + "help"):
+		await client.send_message(channel, config.help_text)
+	elif messageCommand.startswith(config.command_start + "update"):
+		config = Config("config.ini")
+		await showCompletedUpdate()
 	else:
-		await client.send_message(channel, "Command not understood. Type {0}help for options".format(COMMAND_START))
+		await client.send_message(channel, "Command not understood. Type {0}help for options".format(config.command_start))
 
 @client.event 
 async def on_ready():
-	await client.change_presence(game=discord.Game(name=CURRENT_EVENT, url=STREAM_URL, type=1))
+	await client.change_presence(game=discord.Game(name=config.current_event, url=config.stream_URL, type=1))
 
 @client.event 
 async def showAdventurer(adventurer, message=None):
 	e = discord.Embed(title=adventurer.name + " - " + adventurer.title, desc=adventurer.title)
-	portraitURL = PICTURE_SERVER + "adventurers/portraits/{0}.png".format("%20".join(adventurer.name.split()))
+	portraitURL = config.picture_server + "adventurers/portraits/{0}.png".format("%20".join(adventurer.name.split()))
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Unit Type", value=getEmojiElement(adventurer.elementtype) + getEmojiWeapon(adventurer.weapontype) + getEmojiUnit(adventurer.unittype), inline=True)
 	e.add_field(name="Rarity", value=getEmojiRarity(adventurer.rarity), inline=True)
 	e.add_field(name="Max HP/Max STR", value="{0}/{1}".format(adventurer.maxhp, adventurer.maxstr), inline=True)
 	e.add_field(name="Max Co-Op Ability", value=adventurer.maxcoop, inline=True)
 	e.add_field(name="Defense", value=adventurer.defense, inline=True)
-	e.add_field(name="Release Date", value=getHumanStringDate(adventurer.releasedate), inline=True)
+	e.add_field(name="Release Date", value=convert_ISO_date_to_string(adventurer.releasedate), inline=True)
 	for skill in adventurer.skills:
 		e.add_field(name="Skill: {0} [SP Cost: {1}] [Frame Time: {2}]".format(skill.name, skill.spcost, skill.frametime), value=skill.description, inline=False)
 	for ability in adventurer.abilities:
@@ -135,11 +106,11 @@ async def showAdventurerNotFound(name):
 @client.event 
 async def showWyrmprint(wyrmprint, message=None):
 	e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name)
-	portraitURL = PICTURE_SERVER + "wyrmprints/portraits/{0}.png".format("%20".join(wyrmprint.name.split()))
+	portraitURL = config.picture_server + "wyrmprints/portraits/{0}.png".format("%20".join(wyrmprint.name.split()))
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Rarity", value=getEmojiRarity(wyrmprint.rarity), inline=True)
 	e.add_field(name="Max HP/Max STR", value="{0}/{1}".format(wyrmprint.maxhp, wyrmprint.maxstr), inline=True)
-	e.add_field(name="Release Date", value=getHumanStringDate(wyrmprint.releasedate), inline=True)
+	e.add_field(name="Release Date", value=convert_ISO_date_to_string(wyrmprint.releasedate), inline=True)
 	for ability in wyrmprint.abilities:
 		e.add_field(name="Ability: " + ability.name, value=ability.description, inline=False)
 	await showOrEditWyrmprint(e, wyrmprint, message)
@@ -151,12 +122,12 @@ async def showWyrmprintNotFound(name):
 @client.event 
 async def showDragon(dragon, message=None):
 	e = discord.Embed(title=dragon.name, desc=dragon.name)
-	portraitURL = PICTURE_SERVER + "dragons/portraits/{0}.png".format("%20".join(dragon.name.split()))
+	portraitURL = config.picture_server + "dragons/portraits/{0}.png".format("%20".join(dragon.name.split()))
 	e.set_thumbnail(url=portraitURL)
 	e.add_field(name="Element", value=getEmojiElement(dragon.elementtype), inline=True)
 	e.add_field(name="Rarity", value=getEmojiRarity(dragon.rarity), inline=True)
 	e.add_field(name="Max HP/Max STR", value="{0}/{1}".format(dragon.maxhp, dragon.maxstr), inline=True)
-	e.add_field(name="Release Date", value=getHumanStringDate(dragon.releasedate), inline=True)
+	e.add_field(name="Release Date", value=convert_ISO_date_to_string(dragon.releasedate), inline=True)
 	for skill in dragon.skills:
 		e.add_field(name="Skill: " + skill.name, value=skill.description, inline=False)
 	for ability in dragon.abilities:	
@@ -188,38 +159,29 @@ async def showException(message, traceMessage):
 	print(traceMessage)
 	await client.send_message(channel, message)
 
-def determineCriteria(message):
-	lexer = shlex(message, posix=True)
-	lexer.whitespace = ' '
-	lexer.wordchars += '='
-	return dict(word.split('=', maxsplit=1) for word in lexer)
-
 def getEmojiElement(elementtype):
-	return ELEMENT_EMOJI[elementtype]
+	return config.element_emoji[elementtype]
 
 def getEmojiWeapon(weapontype):
-	return WEAPON_EMOJI[weapontype]
+	return config.weapon_emoji[weapontype]
 
 def getEmojiUnit(unittype):
-	return UNIT_EMOJI[unittype]
+	return config.unit_emoji[unittype]
 
 def getEmojiRarity(rarity):
-	return RARITY_EMOJI[rarity] * rarity
-
-def getHumanStringDate(date):
-	return datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f").strftime("%B %d, %Y")
+	return config.rarity_emoji[rarity] * rarity
 
 @client.event
 async def on_reaction_add(reaction, user):
-	if reaction.message.id in active_adventurer_messages and reaction.emoji in adventurer_emojis and user != client.user:
+	if reaction.message.id in active_adventurer_messages and reaction.emoji in config.adventurer_reactions and user != client.user:
 		await client.remove_reaction(reaction.message, reaction.emoji, user)
 		await controller.processAdventurerReaction(reaction.emoji, active_adventurer_messages[reaction.message.id], reaction.message)
 	
-	elif reaction.message.id in active_wyrmprint_messages and reaction.emoji in wyrmprint_emojis and user != client.user:
+	elif reaction.message.id in active_wyrmprint_messages and reaction.emoji in config.wyrmprint_reactions and user != client.user:
 		await client.remove_reaction(reaction.message, reaction.emoji, user)
 		await controller.processWyrmprintReaction(reaction.emoji, active_wyrmprint_messages[reaction.message.id], reaction.message)
 	
-	elif reaction.message.id in active_dragon_messages and reaction.emoji in dragon_emojis and user != client.user:
+	elif reaction.message.id in active_dragon_messages and reaction.emoji in config.dragon_reactions and user != client.user:
 		await client.remove_reaction(reaction.message, reaction.emoji, user)
 		await controller.processDragonReaction(reaction.emoji, active_dragon_messages[reaction.message.id], reaction.message)
 
@@ -248,7 +210,7 @@ async def showOrEditAdventurer(e, adventurer, message=None):
 		active_adventurer_messages = {}
 		msg = await client.send_message(channel, embed=e)
 		active_adventurer_messages[msg.id] = adventurer
-		for emoji in adventurer_emojis:
+		for emoji in config.adventurer_reactions:
 			await client.add_reaction(msg, emoji)
 	else:
 		msg = await client.edit_message(message, embed=e)
@@ -260,7 +222,7 @@ async def showOrEditWyrmprint(e, wyrmprint, message=None):
 		active_wyrmprint_messages = {}
 		msg = await client.send_message(channel, embed=e)
 		active_wyrmprint_messages[msg.id] = wyrmprint
-		for emoji in wyrmprint_emojis:
+		for emoji in config.wyrmprint_reactions:
 			await client.add_reaction(msg, emoji)
 	else:
 		msg = await client.edit_message(message, embed=e)
@@ -272,7 +234,7 @@ async def showOrEditDragon(e, dragon, message=None):
 		active_dragon_messages = {}
 		msg = await client.send_message(channel, embed=e)
 		active_dragon_messages[msg.id] = dragon
-		for emoji in dragon_emojis:
+		for emoji in config.dragon_reactions:
 			await client.add_reaction(msg, emoji)
 	else:
 		msg = await client.edit_message(message, embed=e)
