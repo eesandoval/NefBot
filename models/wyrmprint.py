@@ -85,7 +85,7 @@ class Wyrmprint:
 		, W.Name
 	FROM Wyrmprints W
 	WHERE W.Name LIKE '%' || ? || '%' COLLATE NOCASE
-	ORDER BY W.ReleaseDate DESC
+	ORDER BY W.ReleaseDate ASC
 	LIMIT 1
 	'''
 	abilitiesQueryText = '''

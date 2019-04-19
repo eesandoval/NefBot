@@ -103,7 +103,7 @@ class Dragon:
 	FROM Dragons D
 		INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID 
 	WHERE D.Name LIKE '%' || ? || '%' COLLATE NOCASE 
-	ORDER BY D.ReleaseDate DESC
+	ORDER BY D.ReleaseDate ASC
 	LIMIT 1 
 	'''
 

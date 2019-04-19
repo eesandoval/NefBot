@@ -118,7 +118,7 @@ class Adventurer:
 		INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
 		INNER JOIN UnitTypes UT ON UT.UnitTypeID = A.UnitTypeID
 	WHERE A.Name LIKE '%' || ? || '%' COLLATE NOCASE
-	ORDER BY A.ReleaseDate DESC
+	ORDER BY A.ReleaseDate ASC
 	LIMIT 1
 	'''
 	skillsQueryText = '''
