@@ -46,6 +46,7 @@ class Config:
 		self.wyrmprint_reactions = ["\U0001F5BC","\U0001F508","\U0001F509"]
 		self.dragon_reactions = ["\U0001F5BC","\U0001F508","\U0001F509"]
 		self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',') or []
+		self.streaming = config.getboolean("Discord", "Streaming")
 
 	def set_config_file(self, config_file):
 		project_root = dirname(dirname(__file__))

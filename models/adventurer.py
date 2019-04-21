@@ -94,9 +94,9 @@ class Adventurer:
 
 	def _getAbilities(self, db, level=None):
 		self.abilities = []
-		if level == None:
-			level = 3
-		result = db.query(Adventurer.abilitiesQueryText, (self.adventurerid,))
+		if level == None or level > 2:
+			level = 2
+		result = db.query(Adventurer.abilitiesQueryText, (self.adventurerid, level,))
 		for ability in map(Ability._make, result):
 			self.abilities.append(ability)
 
@@ -133,10 +133,12 @@ class Adventurer:
 	abilitiesQueryText = '''
 	SELECT A.Name 
 		, A.Description 
-		, 2 AS "Level"
+		, Ads.Level
 	FROM AdventurerAbilities Ads
 		INNER JOIN Abilities A ON A.AbilityID = Ads.AbilityID 
 	WHERE Ads.AdventurerID = ?
+		AND Ads.Level = ?
+	ORDER BY Ads.Slot ASC 
 	'''
 	adventurerSearchQueryText = '''
 	SELECT DISTINCT A.Name 

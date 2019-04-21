@@ -80,7 +80,10 @@ async def on_message(message):
 
 @client.event 
 async def on_ready():
-	await client.change_presence(game=discord.Game(name=config.current_event, url=config.stream_URL, type=1))
+	if config.streaming:
+		await client.change_presence(game=discord.Game(name=config.current_event, url=config.stream_URL, type=1))
+	else:
+		await client.change_presence(game=discord.Game(name=config.current_event))
 
 @client.event 
 async def showAdventurer(adventurer, message=None):
@@ -188,19 +191,19 @@ async def on_reaction_add(reaction, user):
 @client.event 
 async def showAdventurerFull(adventurer, message=None):
 	e = discord.Embed(title=adventurer.name + " - " + adventurer.title, desc=adventurer.title)
-	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
+	e.set_image(url=config.picture_server + "adventurers/full/{0}.png".format("%20".join(adventurer.name.split())))
 	await showOrEditAdventurer(e, adventurer, message)
 
 @client.event 
 async def showWyrmprintFull(wyrmprint, message=None):
 	e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name)
-	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
+	e.set_image(url=config.picture_server + "wyrmprints/full/{0}.png".format("%20".join(wyrmprint.name.split())))
 	await showOrEditWyrmprint(e, wyrmprint, message)
 
 @client.event 
 async def showDragonFull(dragon, message=None):
 	e = discord.Embed(title=dragon.name, desc=dragon.name)
-	e.set_image(url="https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/f/f9/100001_01_r04_portrait.png")
+	e.set_image(url=config.picture_server + "dragons/full/{0}.png".format("%20".join(dragon.name.split())))
 	await showOrEditDragon(e, dragon, message)
 
 @client.event 
