@@ -44,11 +44,12 @@ def start_discord_bot():
 
 @client.command(name="exit",
                 description="Shuts down the bot",
+                brief="Shuts down the bot (authorized users only)",
                 aliases=["shutdown", "quit", "close"],
                 pass_context=True)
 async def exit(context):
-    if config.authorized_ids == []
-    or context.message.author.id in config.authorized_ids:
+    if (config.authorized_ids == [] or
+            context.message.author.id in config.authorized_ids):
         await client.say("Shutting down")
         await client.close()
     else:
@@ -57,6 +58,7 @@ async def exit(context):
 
 @client.command(name="get_adventurer",
                 description="Gets an adventurer with the given name",
+                brief="Gets an adventurer using a case insensitive search",
                 aliases=["adv", "adventurer", "a"],
                 pass_context=True)
 async def get_adventurer(context):
@@ -67,6 +69,7 @@ async def get_adventurer(context):
 
 @client.command(name="get_wyrmprint",
                 description="Gets a wyrmprint with the given name",
+                brief="Gets a wyrmprint using a case insensitive search",
                 aliases=["wyr", "wyrmprint", "w"],
                 pass_context=True)
 async def get_wyrmprint(context):
@@ -77,6 +80,7 @@ async def get_wyrmprint(context):
 
 @client.command(name="get_dragon",
                 description="Gets a dragon with the given name",
+                brief="Gets a dragon using a case insensitive search",
                 aliases=["dra", "dragon", "d"],
                 pass_context=True)
 async def get_dragon(context):
@@ -87,6 +91,7 @@ async def get_dragon(context):
 
 @client.command(name="query",
                 description="Queries for anything",
+                brief="Queries for any adventurer, print, or dragon",
                 aliases=["que", "q"],
                 pass_context=True)
 async def query(context):
@@ -95,17 +100,9 @@ async def query(context):
     await controller.query(convert_args_to_dict(message))
 
 
-@client.command(name="help",
-                description="Shows all commands",
-                aliases=["h"],
-                pass_context=True)
-async def help(context):
-    message = handle_context(context)
-    await client.send_message(channel, config.help_text)
-
-
 @client.command(name="update",
                 description="Updates the bot's config",
+                brief="Updates the bot's configurations",
                 aliases=["u"],
                 pass_context=True)
 async def update(context):
@@ -289,27 +286,27 @@ def get_emoji_rarity(rarity):
 
 @client.event
 async def on_reaction_add(reaction, user):
-    if reaction.message.id in active_adventurer_messages
-    and reaction.emoji in config.adventurer_reactions
-    and user != client.user:
+    if (reaction.message.id in active_adventurer_messages and
+            reaction.emoji in config.adventurer_reactions and
+            user != client.user):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
         await controller.process_adventurers_reaction(
             reaction.emoji,
             active_adventurer_messages[reaction.message.id],
             reaction.message)
 
-    elif reaction.message.id in active_wyrmprint_messages
-    and reaction.emoji in config.wyrmprint_reactions
-    and user != client.user:
+    elif (reaction.message.id in active_wyrmprint_messages and
+            reaction.emoji in config.wyrmprint_reactions and
+            user != client.user):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
         await controller.process_wyrmprint_reaction(
             reaction.emoji,
             active_wyrmprint_messages[reaction.message.id],
             reaction.message)
 
-    elif reaction.message.id in active_dragon_messages
-    and reaction.emoji in config.dragon_reactions
-    and user != client.user:
+    elif (reaction.message.id in active_dragon_messages and
+            reaction.emoji in config.dragon_reactions and
+            user != client.user):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
         await controller.process_dragon_reaction(
             reaction.emoji,

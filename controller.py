@@ -78,8 +78,8 @@ def query_adventurers(criteria):
         ability = criteria["ability"]
     if "rarity" in criteria:
         rarity = criteria["rarity"]
-    if element is None and skill is None and weapon is None
-    and ability is None and rarity is None:
+    if (element is None and skill is None and weapon is None and
+            ability is None and rarity is None):
         return []
     return Adventurer.find_adventurers(element, weapon, skill, ability, rarity)
 
@@ -115,8 +115,8 @@ def query_dragons(criteria):
         rarity = criteria["rarity"]
     if "level" in criteria:
         level = criteria["level"]
-    if element is None and skill is None and ability is None
-    and rarity is None:
+    if (element is None and skill is None and ability is None and
+            rarity is None):
         return []
     return Dragon.find_dragons(element, skill, ability, rarity, level)
 

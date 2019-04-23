@@ -43,7 +43,6 @@ class Config:
         self.rarity_emoji = {int(k): v
                              for k, v in config.items("RarityEmojis")}
         self.picture_server = config["Other"]["PictureServer"]
-        self.help_text = config["Other"]["HelpText"].format(self.command_start)
         self.adventurer_reactions = ["\U0001F5BC", "\U0001F508",
                                      "\U0001F509", "\U0001F50A"]
         self.wyrmprint_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
