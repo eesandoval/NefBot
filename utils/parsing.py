@@ -26,11 +26,11 @@ from shlex import shlex
 
 
 def convert_ISO_date_to_string(d):
-	return datetime.strptime(d, "%Y-%m-%d %H:%M:%S.%f").strftime("%B %d, %Y")
+    return datetime.strptime(d, "%Y-%m-%d %H:%M:%S.%f").strftime("%B %d, %Y")
 
 
 def convert_args_to_dict(args):
-	lexer = shlex(args, posix=True)
-	lexer.whitespace = ' '
-	lexer.wordchars += '='
-	return dict(word.split('=', maxsplit=1) for word in lexer)
+    lexer = shlex(args, posix=True)
+    lexer.whitespace = ' '
+    lexer.wordchars += '='
+    return dict(word.split('=', maxsplit=1) for word in lexer)

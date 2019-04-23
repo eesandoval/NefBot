@@ -22,87 +22,90 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 from models.database import Database
-from models.ability import Ability 
+from models.ability import Ability
+
 
 class Wyrmprint:
-	@staticmethod
-	def findWyrmprints(ability=None, rarity=None, level=2):
-		wyrmprints = []
-		params = ()
-		fullQuery = Wyrmprint.wyrmprintSearchQueryText
-		if ability != None:
-			fullQuery += "AND A.name LIKE '%' || ? || '%' COLLATE NOCASE "
-			params += (ability,)
-		if rarity != None:
-			fullQuery += "AND W.rarity >= ? "
-			params += (rarity,)
-		if level != None:
-			fullQuery += "AND WA.level = ? "
-			params += (level,)
-		if len(params) == 0:
-			return wyrmprints 
-		with Database("master.db") as db:
-			result = db.query(fullQuery, params)
-		if result == None:
-			return wyrmprints 
-		for wyrmprint in result:
-			wyrmprints.append(Wyrmprint(wyrmprint[0], wyrmprint[1]))
-		return wyrmprints 
+    @staticmethod
+    def find_wyrmprints(ability=None, rarity=None, level=2):
+        wyrmprints = []
+        params = ()
+        full_query = Wyrmprint.wyrmprint_search_query_text
+        if ability is not None:
+            full_query += "AND A.name LIKE '%' || ? || '%' COLLATE NOCASE "
+            params += (ability,)
+        if rarity is not None:
+            full_query += "AND W.rarity >= ? "
+            params += (rarity,)
+        if level is not None:
+            full_query += "AND WA.level = ? "
+            params += (level,)
+        if len(params) == 0:
+            return wyrmprints
+        with Database("master.db") as db:
+            result = db.query(full_query, params)
+        if result is None:
+            return wyrmprints
+        for wyrmprint in result:
+            wyrmprints.append(Wyrmprint(wyrmprint[0], wyrmprint[1]))
+        return wyrmprints
 
-	def __init__(self, name, level=2):
-		self.name = name
-		with Database("master.db") as db: 
-			if not(self._getWyrmprint(db)):
-				self = None
-			else:
-				self._getAbilities(db, level)
+    def __init__(self, name, level=2):
+        self.name = name
+        with Database("master.db") as db:
+            if not(self._get_wyrmprint(db)):
+                raise KeyError("Wyrmprint with name {0} was not found"
+                               .format(name))
+            else:
+                self._get_abilities(db, level)
 
-	def _getWyrmprint(self, db):
-		result = db.query(Wyrmprint.wyrmprintQueryText, (self.name,))
-		if result == None or result == []:
-			return False
-		result = result[0]
-		self.wyrmprintid = result[0]
-		self.rarity = result[1]
-		self.maxhp = result[2]
-		self.maxstr = result[3]
-		self.releasedate = result[4]
-		self.name = result[5]
-		return True
-	
-	def _getAbilities(self, db, level):
-		self.abilities = []
-		result = db.query(Wyrmprint.abilitiesQueryText, (self.wyrmprintid,level,))
-		for ability in map(Ability._make, result):
-			self.abilities.append(ability)
+    def _get_wyrmprint(self, db):
+        result = db.query(Wyrmprint.wyrmprint_query_text, (self.name,))
+        if result is None or result == []:
+            return False
+        result = result[0]
+        self.wyrmprintid = result[0]
+        self.rarity = result[1]
+        self.maxhp = result[2]
+        self.maxstr = result[3]
+        self.releasedate = result[4]
+        self.name = result[5]
+        return True
 
-	wyrmprintQueryText = '''
-	SELECT W.WyrmprintID 
-		, W.Rarity
-		, W.MaxHP
-		, W.MaxSTR
-		, W.ReleaseDate 
-		, W.Name
-	FROM Wyrmprints W
-	WHERE W.Name LIKE '%' || ? || '%' COLLATE NOCASE
-	ORDER BY W.ReleaseDate ASC
-	LIMIT 1
-	'''
-	abilitiesQueryText = '''
-	SELECT A.Name 
-		, A.Description 
-		, WA.Level
-	FROM WyrmprintAbilities WA
-		INNER JOIN Abilities A ON A.AbilityID = WA.AbilityID 
-	WHERE WA.WyrmprintID = ?
-		AND WA.Level = ?
-	ORDER BY WA.Slot ASC, WA.Level ASC
-	'''
-	wyrmprintSearchQueryText = '''
-	SELECT DISTINCT W.Name
-		, WA.Level
-	FROM Wyrmprints W
-		INNER JOIN WyrmprintAbilities WA ON WA.WyrmprintID = W.WyrmprintID
-		INNER JOIN Abilities A ON A.AbilityID = WA.AbilityID
-	WHERE 1=1 
-	'''
+    def _get_abilities(self, db, level):
+        self.abilities = []
+        result = db.query(Wyrmprint.abilities_query_text,
+                          (self.wyrmprintid, level,))
+        for ability in map(Ability._make, result):
+            self.abilities.append(ability)
+
+    wyrmprint_query_text = '''
+    SELECT W.WyrmprintID
+        , W.Rarity
+        , W.MaxHP
+        , W.MaxSTR
+        , W.ReleaseDate
+        , W.Name
+    FROM Wyrmprints W
+    WHERE W.Name LIKE '%' || ? || '%' COLLATE NOCASE
+    ORDER BY W.ReleaseDate ASC
+    LIMIT 1
+    '''
+    abilities_query_text = '''
+    SELECT A.Name
+        , A.Description
+        , WA.Level
+    FROM WyrmprintAbilities WA
+        INNER JOIN Abilities A ON A.AbilityID = WA.AbilityID
+    WHERE WA.WyrmprintID = ?
+        AND WA.Level = ?
+    ORDER BY WA.Slot ASC, WA.Level ASC
+    '''
+    wyrmprint_search_query_text = '''
+    SELECT DISTINCT W.Name
+        , WA.Level
+    FROM Wyrmprints W
+        INNER JOIN WyrmprintAbilities WA ON WA.WyrmprintID = W.WyrmprintID
+        INNER JOIN Abilities A ON A.AbilityID = WA.AbilityID
+    WHERE 1=1
+    '''

@@ -24,30 +24,33 @@ SOFTWARE.
 from configparser import ConfigParser
 from os.path import dirname, join
 
+
 class Config:
-	def __init__(self, config_file):
-		self.set_config_file(config_file)
-		self.update()
+    def __init__(self, config_file):
+        self.set_config_file(config_file)
+        self.update()
 
-	def update(self):
-		config = ConfigParser()
-		config.read(self.config_file)
-		self.token = config["Discord"]["Token"]
-		self.stream_URL = config["Discord"]["StreamURL"]
-		self.current_event = config["Discord"]["CurrentEvent"]
-		self.command_start = config["Discord"]["CommandStart"]
-		self.element_emoji = dict(config.items("ElementEmojis"))
-		self.weapon_emoji = dict(config.items("WeaponEmojis"))
-		self.unit_emoji = dict(config.items("UnitEmojis"))
-		self.rarity_emoji = {int(k):v for k,v in config.items("RarityEmojis")}
-		self.picture_server = config["Other"]["PictureServer"]
-		self.help_text = config["Other"]["HelpText"].format(self.command_start)
-		self.adventurer_reactions = ["\U0001F5BC","\U0001F508","\U0001F509","\U0001F50A"]
-		self.wyrmprint_reactions = ["\U0001F5BC","\U0001F508","\U0001F509"]
-		self.dragon_reactions = ["\U0001F5BC","\U0001F508","\U0001F509"]
-		self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',') or []
-		self.streaming = config.getboolean("Discord", "Streaming")
+    def update(self):
+        config = ConfigParser()
+        config.read(self.config_file)
+        self.token = config["Discord"]["Token"]
+        self.stream_URL = config["Discord"]["StreamURL"]
+        self.current_event = config["Discord"]["CurrentEvent"]
+        self.command_start = config["Discord"]["CommandStart"]
+        self.element_emoji = dict(config.items("ElementEmojis"))
+        self.weapon_emoji = dict(config.items("WeaponEmojis"))
+        self.unit_emoji = dict(config.items("UnitEmojis"))
+        self.rarity_emoji = {int(k): v
+                             for k, v in config.items("RarityEmojis")}
+        self.picture_server = config["Other"]["PictureServer"]
+        self.help_text = config["Other"]["HelpText"].format(self.command_start)
+        self.adventurer_reactions = ["\U0001F5BC", "\U0001F508",
+                                     "\U0001F509", "\U0001F50A"]
+        self.wyrmprint_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
+        self.dragon_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
+        self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',')
+        self.streaming = config.getboolean("Discord", "Streaming")
 
-	def set_config_file(self, config_file):
-		project_root = dirname(dirname(__file__))
-		self.config_file = join(project_root, config_file)
+    def set_config_file(self, config_file):
+        project_root = dirname(dirname(__file__))
+        self.config_file = join(project_root, config_file)

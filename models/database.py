@@ -21,32 +21,33 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-import sqlite3 
+import sqlite3
+
 
 class Database:
-	def __init__(self, name):
-		self.connection = sqlite3.connect(name)
-		self.cursor = self.connection.cursor()
-	
-	def __enter__(self):
-		return self 
-	
-	def __exit__(self, exc_type, exc_val, exc_tb):
-		self.commit()
-		self.connection.close()
+    def __init__(self, name):
+        self.connection = sqlite3.connect(name)
+        self.cursor = self.connection.cursor()
 
-	def commit(self):
-		self.connection.commit()
+    def __enter__(self):
+        return self
 
-	def execute(self, sql, params=None):
-		self.cursor.execute(sql, params or ())
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.commit()
+        self.connection.close()
 
-	def fetchall(self):
-		return self.cursor.fetchall()
+    def commit(self):
+        self.connection.commit()
 
-	def fetfchone(self):
-		return self.cursor.fetchone()
+    def execute(self, sql, params=None):
+        self.cursor.execute(sql, params or ())
 
-	def query(self, sql, params=None):
-		self.cursor.execute(sql, params or ())
-		return self.fetchall()
+    def fetchall(self):
+        return self.cursor.fetchall()
+
+    def fetfchone(self):
+        return self.cursor.fetchone()
+
+    def query(self, sql, params=None):
+        self.cursor.execute(sql, params or ())
+        return self.fetchall()

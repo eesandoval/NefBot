@@ -21,120 +21,128 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from models.database import Database 
-from models.skill import Skill 
-from models.ability import Ability 
+from models.database import Database
+from models.skill import Skill
+from models.ability import Ability
+
 
 class Dragon:
-	@staticmethod
-	def findDragons(element=None, skill=None, ability=None, rarity=None, level=2):
-		dragons = []
-		params = ()
-		fullQuery = Dragon.dragonSearchQueryText
-		if element != None:
-			fullQuery += "AND ET.name = ? COLLATE NOCASE "
-			params += (element,)
-		if skill != None:
-			fullQuery += "AND S.name LIKE '%' || ? || '%' COLLATE NOCASE "
-			params += (skill,)
-		if ability != None:
-			fullQuery += "AND A.name LIKE '%' || ? || '%' COLLATE NOCASE "
-			params += (ability,)
-		if rarity != None:
-			fullQuery += "AND D.rarity >= ? "
-			params += (rarity,)
-		if level != None:
-			fullQuery += "AND DA.level = ? "
-			params += (level,)
-		if len(params) == 0:
-			return dragons 
-		with Database("master.db") as db:
-			result = db.query(fullQuery, params)
-		if result == None:
-			return dragons 
-		for dragon in result:
-			dragons.append(Dragon(dragon[0], level))
-		return dragons
-	
-	def __init__(self, name, level):
-		self.name = name 
-		with Database("master.db") as db:
-			if not(self._getDragon(db)):
-				self = None
-			else:
-				self._getSkills(db, level)
-				self._getAbilities(db, level)
-				self.level = level
+    @staticmethod
+    def find_dragons(element=None, skill=None, ability=None, rarity=None,
+                    level=2):
+        dragons = []
+        params = ()
+        full_query = Dragon.dragon_search_query_text
+        if element is not None:
+            full_query += "AND ET.name = ? COLLATE NOCASE "
+            params += (element,)
+        if skill is not None:
+            full_query += "AND S.name LIKE '%' || ? || '%' COLLATE NOCASE "
+            params += (skill,)
+        if ability is not None:
+            full_query += "AND A.name LIKE '%' || ? || '%' COLLATE NOCASE "
+            params += (ability,)
+        if rarity is not None:
+            full_query += "AND D.rarity >= ? "
+            params += (rarity,)
+        if level is not None:
+            full_query += "AND DA.level = ? "
+            params += (level,)
+        if len(params) == 0:
+            return dragons
+        with Database("master.db") as db:
+            result = db.query(full_query, params)
+        if result is None:
+            return dragons
+        for dragon in result:
+            dragons.append(Dragon(dragon[0], level))
+        return dragons
 
-	def _getDragon(self, db):
-		result = db.query(Dragon.dragonQueryText, (self.name,))
-		if result == None or result == []:
-			return False
-		result = result[0]
-		self.dragonid = result[0]
-		self.elementtype = result[1].lower()
-		self.rarity = result[2]
-		self.maxhp = result[3]
-		self.maxstr = result[4]
-		self.releasedate = result[5]
-		self.name = result[6]
-		return True
+    def __init__(self, name, level):
+        self.name = name
+        with Database("master.db") as db:
+            if not(self._get_dragon(db)):
+                raise KeyError("Dragon with name {0} was not found"
+                               .format(name))
+            else:
+                self._get_skills(db, level)
+                self._get_abilities(db, level)
+                self.level = level
 
-	def _getSkills(self, db, level):
-		self.skills = []
-		result = db.query(Dragon.skillsQueryText, (level,self.dragonid,))
-		for skill in map(Skill._make, result):
-			self.skills.append(skill)
+    def _get_dragon(self, db):
+        result = db.query(Dragon.dragon_query_text, (self.name,))
+        if result is None or result == []:
+            return False
+        result = result[0]
+        self.dragonid = result[0]
+        self.elementtype = result[1].lower()
+        self.rarity = result[2]
+        self.maxhp = result[3]
+        self.maxstr = result[4]
+        self.releasedate = result[5]
+        self.name = result[6]
+        return True
 
-	def _getAbilities(self, db, level):
-		self.abilities = []
-		result = db.query(Dragon.abilitiesQueryText, (self.dragonid,level,))
-		for ability in map(Ability._make, result):
-			self.abilities.append(ability)
+    def _get_skills(self, db, level):
+        self.skills = []
+        result = db.query(Dragon.skills_query_text,
+                          (level, self.dragonid,))
+        for skill in map(Skill._make, result):
+            self.skills.append(skill)
 
-	dragonQueryText = '''
-	SELECT D.DragonID
-		, ET.Name AS "ElementTypeName"
-		, D.Rarity
-		, D.HP
-		, D.STR
-		, D.ReleaseDate
-		, D.Name 
-	FROM Dragons D
-		INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID 
-	WHERE D.Name LIKE '%' || ? || '%' COLLATE NOCASE 
-	ORDER BY D.ReleaseDate ASC
-	LIMIT 1 
-	'''
+    def _get_abilities(self, db, level):
+        self.abilities = []
+        result = db.query(Dragon.abilities_query_text,
+                          (self.dragonid, level,))
+        for ability in map(Ability._make, result):
+            self.abilities.append(ability)
 
-	abilitiesQueryText = '''
-	SELECT A.Name
-		, A.Description
-		, DA.Level
-	FROM DragonAbilities DA
-		INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
-	WHERE DA.DragonID = ?
-		AND DA.Level = ?
-	ORDER BY DA.Slot ASC, DA.Level ASC
-	'''
+    dragon_query_text = '''
+    SELECT D.DragonID
+        , ET.Name AS "ElementTypeName"
+        , D.Rarity
+        , D.HP
+        , D.STR
+        , D.ReleaseDate
+        , D.Name
+    FROM Dragons D
+        INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID
+    WHERE D.Name LIKE '%' || ? || '%' COLLATE NOCASE
+    ORDER BY D.ReleaseDate ASC
+    LIMIT 1
+    '''
 
-	skillsQueryText = '''
-	SELECT S.Name
-		, CASE ? WHEN 1 THEN S.DescriptionLevel1 ELSE S.DescriptionLevel2 END AS Description
-		, S.SPCost
-		, S.FrameTime
-	FROM DragonSkills DS
-		INNER JOIN Skills S ON S.SkillID = DS.SkillID 
-	WHERE DS.DragonID = ?
-	'''
+    abilities_query_text = '''
+    SELECT A.Name
+        , A.Description
+        , DA.Level
+    FROM DragonAbilities DA
+        INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
+    WHERE DA.DragonID = ?
+        AND DA.Level = ?
+    ORDER BY DA.Slot ASC, DA.Level ASC
+    '''
 
-	dragonSearchQueryText = '''
-	SELECT DISTINCT D.Name 
-	FROM Dragons D
-		INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID
-		INNER JOIN DragonSkills DS ON DS.DragonID = D.DragonID
-		INNER JOIN Skills S ON S.SkillID = DS.SkillID
-		INNER JOIN DragonAbilities DA ON DA.DragonID = D.DragonID
-		INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
-	WHERE 1=1 
-	'''
+    skills_query_text = '''
+    SELECT S.Name
+        , CASE ?
+        WHEN 1 THEN S.DescriptionLevel1
+        ELSE S.DescriptionLevel2
+        END AS Description
+        , S.SPCost
+        , S.FrameTime
+    FROM DragonSkills DS
+        INNER JOIN Skills S ON S.SkillID = DS.SkillID
+    WHERE DS.DragonID = ?
+    '''
+
+    dragon_search_query_text = '''
+    SELECT DISTINCT D.Name
+    FROM Dragons D
+        INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID
+        INNER JOIN DragonSkills DS ON DS.DragonID = D.DragonID
+        INNER JOIN Skills S ON S.SkillID = DS.SkillID
+        INNER JOIN DragonAbilities DA ON DA.DragonID = D.DragonID
+        INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
+    WHERE 1=1
+    '''
