@@ -29,7 +29,7 @@ from models.skill import Skill
 class Adventurer:
     @staticmethod
     def find_adventurers(element=None, weapon=None, skill=None, ability=None,
-                        rarity=None):
+                         rarity=None):
         adventurers = []
         params = ()
         full_query = Adventurer.adventurer_search_query_text

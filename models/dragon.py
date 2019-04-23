@@ -29,7 +29,7 @@ from models.ability import Ability
 class Dragon:
     @staticmethod
     def find_dragons(element=None, skill=None, ability=None, rarity=None,
-                    level=2):
+                     level=2):
         dragons = []
         params = ()
         full_query = Dragon.dragon_search_query_text
