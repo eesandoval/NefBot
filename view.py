@@ -327,7 +327,7 @@ async def show_adventurer_full(adventurer, message=None):
 @client.event
 async def show_wyrmprint_full(wyrmprint, message=None):
     e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name)
-    url_name = "%20".join(adventurer.name.split())
+    url_name = "%20".join(wyrmprint.name.split())
     sub_URL = "wyrmprints/full/{0}.png".format(url_name)
     e.set_image(url=config.picture_server + sub_URL)
     await show_or_edit_wyrmprint(e, wyrmprint, message)

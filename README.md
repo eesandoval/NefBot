@@ -8,36 +8,48 @@
 # About
 ## Summary
 A simple discord bot used to gather information from the Dragalia Lost mobile game. It is able to pull up information regarding adventurers, dragons, and wyrmprints as well as querying the database it uses to find any of the three with a combination of elements (weapon, element, abilities, etc).
-## Adventurer Searching
-<img src="https://imgur.com/wmm77hF.png" width="400">
+## Searching By Name
+<img src="https://i.imgur.com/AAhkUcC.png" width="400">
 
-You can search for adventurers with the following command
+You can search for adventurers, dragons, and wyrmprints with the following command
 ```
-^adv [name]
+^(a|d|w) [name]
 ```
-Names are not case sensitive and you can use incomplete names as well. Additionally, if multiple results would be found, the latest one released in game will be pulled. 
+Where a = adventurers, d = dragons, and w = wyrmprints. Names are not case sensitive and you can use incomplete names as well. Additionally, if multiple results would be found, the earliest one released in game will be pulled. 
 
-## Wyrmprint and Dragon Searching
-<img src="https://imgur.com/J9Gpl4R.png" width="400">
+## Adjusting Bind Level
+### 0UB
+<img src="https://i.imgur.com/Of9H1xD.png" width="400">
 
-You can search for wyrmprints and dragons with the following command
-```
-^(dra|wyr) [name] [leve]
-```
-Level is an optional attribute that will list the abilities/skills of the search result. If level=1, then this gives a 0 unbind wyrmprint or dragon. If level=2, then this gives a max unbound wyrmprint or dragon. By default the level is set to 2.
+### MUB
+<img src="https://i.imgur.com/sByB0kt.png" width="400">
+
+You can now view the adventurers, dragons, or wyrmprints at different bind levels using the reactions at the bottom of the message. Ticking the sound button that is lower will show the item at 0UB, while ticking the sound button at max will show the item at MUB. For adventurers, this bind level is determined by their skills and abilities with three different reactions to view them from level 1, 2, and 3. 
+
+## Full Image View
+<img src="https://i.imgur.com/90Lut8Y.png" width="400">
+
+You can also view the full image of these characters and items using the portrait reaction button. 
 
 ## Querying
 <img src="https://i.imgur.com/1rs8lfC.png" width="400">
 
 There exists additionally a query function to find adventurers, dragons, or wyrmprints with specific skills, abilities, rarities, element, weapon, etc.
 ```
-^query type=(adv|wyr|dra) key=value
+^query type=(a|w|d) key=value
 ```
 Key is defined as an attribute (such as element or weapon) where value is the value of the key. Multiple key value pairs can be given. If the value has spaces, surround it with quotes. Below is an example searching for adventurers with the Bog Res ability at 100%.
 ```
 ^query type=adv ability="Bog Res +100%"
 ```
 Be warned this will return ALL results, and may spam the chat log. Use at your own discretion.
+
+## Additional Commands
+
+For help with any additional commands, please see the help menu using the below command
+```
+^help
+```
 
 # Installation
 ## Requirements
