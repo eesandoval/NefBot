@@ -49,6 +49,10 @@ class Config:
         self.dragon_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
         self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',')
         self.streaming = config.getboolean("Discord", "Streaming")
+        if config.has_option("Discord", "MessageLimit"):
+            self.message_limit = config.getint("Discord", "MessageLimit")
+        else:
+            self.message_limit = 1
 
     def set_config_file(self, config_file):
         project_root = dirname(dirname(__file__))

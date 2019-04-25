@@ -34,6 +34,7 @@ channel = None
 active_adventurer_messages = {}
 active_wyrmprint_messages = {}
 active_dragon_messages = {}
+all_active_messages = []
 config = Config("config.ini")
 client = Bot(command_prefix=config.command_start)
 
@@ -345,10 +346,11 @@ async def show_dragon_full(dragon, message=None):
 @client.event
 async def show_or_edit_adventurer(e, adventurer, message=None):
     if message is None:
-        global active_adventurer_messages
-        active_adventurer_messages = {}
+        global active_adventurer_messages, all_active_messages
+        await clear_active_messages()
         msg = await client.send_message(channel, embed=e)
         active_adventurer_messages[msg.id] = adventurer
+        all_active_messages.append(msg)
         for emoji in config.adventurer_reactions:
             await client.add_reaction(msg, emoji)
     else:
@@ -358,10 +360,11 @@ async def show_or_edit_adventurer(e, adventurer, message=None):
 @client.event
 async def show_or_edit_wyrmprint(e, wyrmprint, message=None):
     if message is None:
-        global active_wyrmprint_messages
-        active_wyrmprint_messages = {}
+        global active_wyrmprint_messages, all_active_messages
+        await clear_active_messages()
         msg = await client.send_message(channel, embed=e)
         active_wyrmprint_messages[msg.id] = wyrmprint
+        all_active_messages.append(msg)
         for emoji in config.wyrmprint_reactions:
             await client.add_reaction(msg, emoji)
     else:
@@ -372,9 +375,10 @@ async def show_or_edit_wyrmprint(e, wyrmprint, message=None):
 async def show_or_edit_dragon(e, dragon, message=None):
     if message is None:
         global active_dragon_messages
-        active_dragon_messages = {}
+        await clear_active_messages()
         msg = await client.send_message(channel, embed=e)
         active_dragon_messages[msg.id] = dragon
+        all_active_messages.append(msg)
         for emoji in config.dragon_reactions:
             await client.add_reaction(msg, emoji)
     else:
@@ -384,3 +388,20 @@ async def show_or_edit_dragon(e, dragon, message=None):
 @client.event
 async def show_completed_update():
     await client.send_message(channel, "Update complete")
+
+
+@client.event
+async def clear_active_messages():
+    global all_active_messages, active_adventurer_messages, \
+        active_dragon_messages, active_wyrmprint_messages
+
+    while len(all_active_messages) > max(0, config.message_limit - 1):
+        message = all_active_messages.pop(0)
+        await client.clear_reactions(message)
+
+        if message.id in active_adventurer_messages:
+            active_adventurer_messages.pop(message.id)
+        elif message.id in active_dragon_messages:
+            active_dragon_messages.pop(message.id)
+        elif message.id in active_wyrmprint_messages:
+            active_wyrmprint_messages.pop(message.id)
