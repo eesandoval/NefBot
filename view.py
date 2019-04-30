@@ -136,9 +136,10 @@ async def on_ready():
 
 @client.event
 async def show_adventurer(adventurer, message=None):
-    e = discord.Embed(title=adventurer.name + " - " + adventurer.title,
-                      desc=adventurer.title)
     url_name = "%20".join(adventurer.name.split())
+    e = discord.Embed(title=adventurer.name + " - " + adventurer.title,
+                      desc=adventurer.title,
+                      url=config.gamepedia_url.format(url_name))
     sub_portrait_URL = "adventurers/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
@@ -181,9 +182,10 @@ async def show_adventurer_not_found(name):
 
 @client.event
 async def show_wyrmprint(wyrmprint, message=None):
-    e = discord.Embed(title=wyrmprint.name,
-                      desc=wyrmprint.name)
     url_name = "%20".join(wyrmprint.name.split())
+    e = discord.Embed(title=wyrmprint.name,
+                      desc=wyrmprint.name,
+                      url=config.gamepedia_url.format(url_name))
     sub_portrait_URL = "wyrmprints/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
@@ -210,8 +212,9 @@ async def show_wyrmprint_not_found(name):
 
 @client.event
 async def show_dragon(dragon, message=None):
-    e = discord.Embed(title=dragon.name, desc=dragon.name)
     url_name = "%20".join(dragon.name.split())
+    e = discord.Embed(title=dragon.name, desc=dragon.name,
+                      url=config.gamepedia_url.format(url_name))
     sub_portrait_URL = "dragons/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
@@ -326,9 +329,10 @@ async def on_reaction_add(reaction, user):
 
 @client.event
 async def show_adventurer_full(adventurer, message=None):
-    e = discord.Embed(title=adventurer.name + " - " + adventurer.title,
-                      desc=adventurer.title)
     url_name = "%20".join(adventurer.name.split())
+    e = discord.Embed(title=adventurer.name + " - " + adventurer.title,
+                      desc=adventurer.title,
+                      url=config.gamepedia_url.format(url_name))
     sub_URL = "adventurers/full/{0}.png".format(url_name)
     e.set_image(url=config.picture_server + sub_URL)
     await show_or_edit_adventurer(e, adventurer, message)
@@ -336,17 +340,29 @@ async def show_adventurer_full(adventurer, message=None):
 
 @client.event
 async def show_wyrmprint_full(wyrmprint, message=None):
-    e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name)
     url_name = "%20".join(wyrmprint.name.split())
+    e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name,
+                      url=config.gamepedia_url.format(url_name))
     sub_URL = "wyrmprints/full/{0}.png".format(url_name)
     e.set_image(url=config.picture_server + sub_URL)
     await show_or_edit_wyrmprint(e, wyrmprint, message)
 
 
 @client.event
+async def show_wyrmprint_base_full(wyrmprint, message=None):
+    url_name = "%20".join(wyrmprint.name.split())
+    e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name,
+                      url=config.gamepedia_url.format(url_name))
+    sub_URL = "wyrmprints/base/{0}.png".format(url_name)
+    e.set_image(url=config.picture_server + sub_URL)
+    await show_or_edit_wyrmprint(e, wyrmprint, message)
+
+
+@client.event
 async def show_dragon_full(dragon, message=None):
-    e = discord.Embed(title=dragon.name, desc=dragon.name)
     url_name = "%20".join(dragon.name.split())
+    e = discord.Embed(title=dragon.name, desc=dragon.name,
+                      url=config.gamepedia_url.format(url_name))
     sub_URL = "dragons/full/{0}.png".format(url_name)
     e.set_image(url=config.picture_server + sub_URL)
     await show_or_edit_dragon(e, dragon, message)

@@ -187,6 +187,8 @@ async def process_wyrmprint_reaction(emoji, wyrmprint, message):
         await process_wyrmprint(wyrmprint.name, 2, message)
     elif emoji == "\U0001F50A":  # 3 unbinds
         await process_wyrmprint(wyrmprint.name, 3, message)
+    elif emoji == "\U0001F3A8":  # Full base picture
+        await view.show_wyrmprint_base_full(wyrmprint, message)
 
 async def process_dragon_reaction(emoji, dragon, message):
     if emoji == "\U0001F5BC":  # Full picture
