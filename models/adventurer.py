@@ -85,6 +85,7 @@ class Adventurer:
         self.releasedate = result[9]
         self.unittype = result[10].lower()
         self.name = result[11]
+        self.limited = result[12]
         return True
 
     def _get_skills(self, db, level=None):
@@ -118,6 +119,7 @@ class Adventurer:
         , A.ReleaseDate
         , UT.Name AS "UnitType"
         , A.Name
+        , A.Limited
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID

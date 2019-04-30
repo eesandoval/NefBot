@@ -145,7 +145,8 @@ async def show_adventurer(adventurer, message=None):
     e.add_field(name="Unit Type",
                 value=get_emoji_element(adventurer.elementtype) +
                 get_emoji_weapon(adventurer.weapontype) +
-                get_emoji_unit(adventurer.unittype),
+                get_emoji_unit(adventurer.unittype) +
+                get_emoji_limited(adventurer.limited),
                 inline=True)
     e.add_field(name="Rarity", value=get_emoji_rarity(adventurer.rarity),
                 inline=True)
@@ -192,7 +193,8 @@ async def show_wyrmprint(wyrmprint, message=None):
                 value="{0}/{1}".format(wyrmprint.maxhp, wyrmprint.maxstr),
                 inline=True)
     e.add_field(name="Release Date",
-                value=convert_ISO_date_to_string(wyrmprint.releasedate),
+                value=convert_ISO_date_to_string(wyrmprint.releasedate) +
+                get_emoji_limited(wyrmprint.limited),
                 inline=True)
     ability_format = "Ability: {0}"
     for ability in wyrmprint.abilities:
@@ -213,7 +215,8 @@ async def show_dragon(dragon, message=None):
     sub_portrait_URL = "dragons/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
-    e.add_field(name="Element", value=get_emoji_element(dragon.elementtype),
+    e.add_field(name="Element", value=get_emoji_element(dragon.elementtype) +
+                get_emoji_limited(dragon.limited),
                 inline=True)
     e.add_field(name="Rarity", value=get_emoji_rarity(dragon.rarity),
                 inline=True)
@@ -283,6 +286,12 @@ def get_emoji_unit(unittype):
 
 def get_emoji_rarity(rarity):
     return config.rarity_emoji[rarity] * rarity
+
+
+def get_emoji_limited(limited):
+    if limited == 1:
+        return config.limited_emoji
+    return ""
 
 
 @client.event

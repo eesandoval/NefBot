@@ -81,6 +81,7 @@ class Dragon:
         self.maxstr = result[4]
         self.releasedate = result[5]
         self.name = result[6]
+        self.limited = result[7]
         return True
 
     def _get_skills(self, db, level):
@@ -105,6 +106,7 @@ class Dragon:
         , D.STR
         , D.ReleaseDate
         , D.Name
+        , D.Limited
     FROM Dragons D
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID
     WHERE D.Name LIKE '%' || ? || '%' COLLATE NOCASE

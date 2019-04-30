@@ -87,7 +87,7 @@ def query_adventurers(criteria):
 def query_wyrmprints(criteria):
     ability = None
     rarity = None
-    level = 2
+    level = 3
     if "ability" in criteria:
         ability = criteria["ability"]
     if "rarity" in criteria:
@@ -142,7 +142,7 @@ async def process_wyrmprint(name, level=None, message=None):
         if name is None or name == "":
             await view.show_invalid_name()
 
-        wyrmprint = Wyrmprint(name, level or 2)
+        wyrmprint = Wyrmprint(name, level or 3)
         if wyrmprint is None:
             await view.show_wyrmprint_not_found(name)
         else:
@@ -185,6 +185,8 @@ async def process_wyrmprint_reaction(emoji, wyrmprint, message):
         await process_wyrmprint(wyrmprint.name, 1, message)
     elif emoji == "\U0001F509":  # 2 unbinds
         await process_wyrmprint(wyrmprint.name, 2, message)
+    elif emoji == "\U0001F50A":  # 3 unbinds
+        await process_wyrmprint(wyrmprint.name, 3, message)
 
 async def process_dragon_reaction(emoji, dragon, message):
     if emoji == "\U0001F5BC":  # Full picture

@@ -27,7 +27,7 @@ from models.ability import Ability
 
 class Wyrmprint:
     @staticmethod
-    def find_wyrmprints(ability=None, rarity=None, level=2):
+    def find_wyrmprints(ability=None, rarity=None, level=3):
         wyrmprints = []
         params = ()
         full_query = Wyrmprint.wyrmprint_search_query_text
@@ -50,7 +50,7 @@ class Wyrmprint:
             wyrmprints.append(Wyrmprint(wyrmprint[0], wyrmprint[1]))
         return wyrmprints
 
-    def __init__(self, name, level=2):
+    def __init__(self, name, level=3):
         self.name = name
         with Database("master.db") as db:
             if not(self._get_wyrmprint(db)):
@@ -70,6 +70,7 @@ class Wyrmprint:
         self.maxstr = result[3]
         self.releasedate = result[4]
         self.name = result[5]
+        self.limited = result[6]
         return True
 
     def _get_abilities(self, db, level):
@@ -86,6 +87,7 @@ class Wyrmprint:
         , W.MaxSTR
         , W.ReleaseDate
         , W.Name
+        , W.Limited
     FROM Wyrmprints W
     WHERE W.Name LIKE '%' || ? || '%' COLLATE NOCASE
     ORDER BY W.ReleaseDate ASC

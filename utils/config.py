@@ -45,7 +45,8 @@ class Config:
         self.picture_server = config["Other"]["PictureServer"]
         self.adventurer_reactions = ["\U0001F5BC", "\U0001F508",
                                      "\U0001F509", "\U0001F50A"]
-        self.wyrmprint_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
+        self.wyrmprint_reactions = ["\U0001F5BC", "\U0001F508",
+                                    "\U0001F509", "\U0001F50A"]
         self.dragon_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
         self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',')
         self.streaming = config.getboolean("Discord", "Streaming")
@@ -53,6 +54,7 @@ class Config:
             self.message_limit = config.getint("Discord", "MessageLimit")
         else:
             self.message_limit = 1
+        self.limited_emoji = "<:limited:571981149497196575>"
 
     def set_config_file(self, config_file):
         project_root = dirname(dirname(__file__))
