@@ -58,6 +58,14 @@ class Adventurer:
             adventurers.append(Adventurer(adventurer[0]))
         return adventurers
 
+    @staticmethod
+    def get_adventurer_id(name):
+        with Database("master.db") as db:
+            result = db.query(Adventurer.id_query_text, (name,))
+        if result is None or result == []:
+            return 0
+        return int(result[0][0])
+
     def __init__(self, name, level=None):
         self.name = name
         with Database("master.db") as db:
@@ -70,6 +78,8 @@ class Adventurer:
 
     def _get_adventurer(self, db):
         result = db.query(Adventurer.adventurer_query_text, (self.name,))
+        if result is None or result == []:
+            result = db.query(Adventurer.alias_query_text, (self.name,))
         if result is None or result == []:
             return False
         result = result[0]
@@ -161,4 +171,34 @@ class Adventurer:
         INNER JOIN AdventurerAbilities AA ON AA.AdventurerID = A.AdventurerID
         INNER JOIN Abilities Ab ON Ab.AbilityID = AA.AbilityID
     WHERE 1=1
+    '''
+    alias_query_text = '''
+    SELECT A.AdventurerID
+        , A.Title
+        , A.Rarity
+        , ET.Name AS "ElementType"
+        , WT.Name AS "WeaponType"
+        , A.MaxHP
+        , A.MaxSTR
+        , A.MaxCoOp
+        , A.Defense
+        , A.ReleaseDate
+        , UT.Name AS "UnitType"
+        , A.Name
+        , A.Limited
+    FROM Adventurers A
+        INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
+        INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
+        INNER JOIN UnitTypes UT ON UT.UnitTypeID = A.UnitTypeID
+        INNER JOIN Aliases AL ON AL.AdventurerID = A.AdventurerID
+            AND AL.AdventurerID IS NOT NULL
+    WHERE AL.AliasText LIKE '%' || ? || '%' COLLATE NOCASE
+    ORDER BY A.ReleaseDate ASC
+    LIMIT 1
+    '''
+    id_query_text = '''
+    SELECT AdventurerID
+    FROM Adventurers
+    WHERE Name LIKE '%' || ? || '%' COLLATE NOCASE
+    LIMIT 1
     '''

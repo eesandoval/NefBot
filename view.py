@@ -112,6 +112,17 @@ async def update(context):
     await show_completed_update()
 
 
+@client.command(name="alias",
+                description="Creates a new alias to search by",
+                brief="Creates a new alias to search by",
+                aliases=["al", "ali", "alia"],
+                pass_context=True)
+async def alias(context):
+    message = handle_context(context)
+    await client.send_typing(channel)
+    await controller.create_alias(message)
+
+
 def handle_context(context):
     global channel
     channel = context.message.channel
@@ -413,6 +424,11 @@ async def show_or_edit_dragon(e, dragon, message=None):
 @client.event
 async def show_completed_update():
     await client.send_message(channel, "Update complete")
+
+
+@client.event
+async def show_completed_alias():
+    await client.send_message(channel, "Alias created")
 
 
 @client.event

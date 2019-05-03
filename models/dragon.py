@@ -58,6 +58,14 @@ class Dragon:
             dragons.append(Dragon(dragon[0], level))
         return dragons
 
+    @staticmethod
+    def get_dragon_id(name):
+        with Database("master.db") as db:
+            result = db.query(Dragon.id_query_text, (name,))
+        if result is None or result == []:
+            return 0
+        return int(result[0][0])
+
     def __init__(self, name, level):
         self.name = name
         with Database("master.db") as db:
@@ -71,6 +79,8 @@ class Dragon:
 
     def _get_dragon(self, db):
         result = db.query(Dragon.dragon_query_text, (self.name,))
+        if result is None or result == []:
+            result = db.query(Dragon.alias_query_text, (self.name,))
         if result is None or result == []:
             return False
         result = result[0]
@@ -147,4 +157,27 @@ class Dragon:
         INNER JOIN DragonAbilities DA ON DA.DragonID = D.DragonID
         INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
     WHERE 1=1
+    '''
+    alias_query_text = '''
+    SELECT D.DragonID
+        , ET.Name AS "ElementTypeName"
+        , D.Rarity
+        , D.HP
+        , D.STR
+        , D.ReleaseDate
+        , D.Name
+        , D.Limited
+    FROM Dragons D
+        INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID
+        INNER JOIN Aliases AL ON AL.DragonID = D.DragonID
+            AND AL.DragonID IS NOT NULL
+    WHERE AL.AliasText LIKE '%' || ? || '%' COLLATE NOCASE
+    ORDER BY D.ReleaseDate ASC
+    LIMIT 1
+    '''
+    id_query_text = '''
+    SELECT DragonID
+    FROM Dragons
+    WHERE Name LIKE '%' || ? || '%' COLLATE NOCASE
+    LIMIT 1
     '''

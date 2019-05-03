@@ -50,6 +50,14 @@ class Wyrmprint:
             wyrmprints.append(Wyrmprint(wyrmprint[0], wyrmprint[1]))
         return wyrmprints
 
+    @staticmethod
+    def get_wyrmprint_id(name):
+        with Database("master.db") as db:
+            result = db.query(Wyrmprint.id_query_text, (name,))
+        if result is None or result == []:
+            return 0
+        return int(result[0][0])
+
     def __init__(self, name, level=3):
         self.name = name
         with Database("master.db") as db:
@@ -61,6 +69,8 @@ class Wyrmprint:
 
     def _get_wyrmprint(self, db):
         result = db.query(Wyrmprint.wyrmprint_query_text, (self.name,))
+        if result is None or result == []:
+            result = db.query(Wyrmprint.alias_query_text, (self.name,))
         if result is None or result == []:
             return False
         result = result[0]
@@ -110,4 +120,25 @@ class Wyrmprint:
         INNER JOIN WyrmprintAbilities WA ON WA.WyrmprintID = W.WyrmprintID
         INNER JOIN Abilities A ON A.AbilityID = WA.AbilityID
     WHERE 1=1
+    '''
+    alias_query_text = '''
+    SELECT W.WyrmprintID
+        , W.Rarity
+        , W.MaxHP
+        , W.MaxSTR
+        , W.ReleaseDate
+        , W.Name
+        , W.Limited
+    FROM Wyrmprints W
+        INNER JOIN Aliases AL ON AL.WyrmprintID = W.WyrmprintID
+            AND AL.WyrmprintID IS NOT NULL
+    WHERE AL.AliasText LIKE '%' || ? || '%' COLLATE NOCASE
+    ORDER BY W.ReleaseDate ASC
+    LIMIT 1
+    '''
+    id_query_text = '''
+    SELECT WyrmprintID
+    FROM Wyrmprints
+    WHERE Name LIKE '%' || ? || '%' COLLATE NOCASE
+    LIMIT 1
     '''
