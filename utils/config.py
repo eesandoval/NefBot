@@ -46,8 +46,8 @@ class Config:
         self.adventurer_reactions = ["\U0001F5BC", "\U0001F508",
                                      "\U0001F509", "\U0001F50A"]
         self.wyrmprint_reactions = ["\U0001F5BC", "\U0001F3A8",
-                                    "\U0001F509", "\U0001F50A",
-                                    "\U0001F508"]
+                                    "\U0001F508", "\U0001F509",
+                                    "\U0001F50A"]
         self.dragon_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
         self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',')
         self.streaming = config.getboolean("Discord", "Streaming")
