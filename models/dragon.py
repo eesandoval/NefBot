@@ -64,7 +64,7 @@ class Dragon:
             result = db.query(Dragon.id_query_text, (name,))
         if result is None or result == []:
             return 0
-        return int(result[0][0])
+        return (int(result[0][0]), result[0][1])
 
     def __init__(self, name, level):
         self.name = name
@@ -176,7 +176,7 @@ class Dragon:
     LIMIT 1
     '''
     id_query_text = '''
-    SELECT DragonID
+    SELECT DragonID, Name
     FROM Dragons
     WHERE Name LIKE '%' || ? || '%' COLLATE NOCASE
     LIMIT 1

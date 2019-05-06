@@ -147,7 +147,7 @@ async def update():
 async def alias(alias_text, aliased_name=None):
     try:
         alias_result = controller.handle_alias(alias_text, aliased_name)
-        await show_completed_alias(alias_result)
+        await client.say(alias_result)
     except Exception as e:
         await show_exception(e)
 
@@ -466,11 +466,6 @@ async def show_or_edit_dragon(e, dragon, message=None):
             await client.add_reaction(msg, emoji)
     else:
         msg = await client.edit_message(message, embed=e)
-
-
-@client.event
-async def show_completed_alias(status):
-    await client.say("Alias {0}".format(status))
 
 
 @client.event

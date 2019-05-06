@@ -66,35 +66,43 @@ delete_alias_text = '''
 def delete_alias(text):
     with Database("master.db") as db:
         db.execute(delete_alias_text, (text,))
-    return "Deleted"
+    return "Deleted alias: {0}".format(text)
 
 
-def create_update_alias(alias_id, text, alias_type):
+def create_update_alias(alias_id, text, alias_type, aliased_name):
     with Database("master.db") as db:
         resultset = db.query(find_alias_text, (text,))
     if resultset is not None and len(resultset) > 0:
-        return update_alias(alias_id, text, alias_type)
+        return update_alias(alias_id, text, alias_type, aliased_name)
     else:
-        return create_alias(alias_id, text, alias_type)
+        return create_alias(alias_id, text, alias_type, aliased_name)
 
 
-def create_alias(alias_id, text, alias_type):
+def create_alias(alias_id, text, alias_type, aliased_name):
+    result = "Created alias: {0} -> {1} ({2})"
     with Database("master.db") as db:
         if alias_type == 0:
+            result = result.format(text, aliased_name, "Adventurer")
             db.execute(create_adventurer_alias_text, (alias_id, text,))
         elif alias_type == 1:
+            result = result.format(text, aliased_name, "Wyrmprint")
             db.execute(create_wyrmprint_alias_text, (alias_id, text,))
         elif alias_type == 2:
+            result = result.format(text, aliased_name, "Dragon")
             db.execute(create_dragon_alias_text, (alias_id, text,))
-    return "Created"
+    return result
 
 
-def update_alias(alias_id, text, alias_type):
+def update_alias(alias_id, text, alias_type, aliased_name):
+    result = "Updated alias: {0} -> {1} ({2})"
     with Database("master.db") as db:
         if alias_type == 0:
+            result = result.format(text, aliased_name, "Adventurer")
             db.execute(update_adventurer_alias_text, (alias_id, text,))
         elif alias_type == 1:
+            result = result.format(text, aliased_name, "Wyrmprint")
             db.execute(update_wyrmprint_alias_text, (alias_id, text,))
         elif alias_type == 2:
+            result = result.format(text, aliased_name, "Dragon")
             db.execute(update_dragon_alias_text, (alias_id, text,))
-    return "Updated"
+    return result

@@ -56,7 +56,7 @@ class Wyrmprint:
             result = db.query(Wyrmprint.id_query_text, (name,))
         if result is None or result == []:
             return 0
-        return int(result[0][0])
+        return (int(result[0][0]), result[0][1])
 
     def __init__(self, name, level=3):
         self.name = name
@@ -137,7 +137,7 @@ class Wyrmprint:
     LIMIT 1
     '''
     id_query_text = '''
-    SELECT WyrmprintID
+    SELECT WyrmprintID, Name
     FROM Wyrmprints
     WHERE Name LIKE '%' || ? || '%' COLLATE NOCASE
     LIMIT 1

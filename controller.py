@@ -146,12 +146,14 @@ def handle_alias(alias_text, aliased_name):
     alias_type = 0
     lst = [Adventurer.get_adventurer_id, Wyrmprint.get_wyrmprint_id,
            Dragon.get_dragon_id]
-    aliased_id = 0
+    id_name = (0, "")
     alias_type = -1
-    while aliased_id == 0 and alias_type < len(lst):
+    while id_name[0] == 0 and alias_type + 1 < len(lst):
         alias_type += 1
-        aliased_id = lst[alias_type](aliased_name)
-    return create_update_alias(aliased_id, alias_text, alias_type)
+        id_name = lst[alias_type](aliased_name)
+    if id_name[0] == 0:
+        raise KeyError("Could not find {0}".format(aliased_name))
+    return create_update_alias(id_name[0], alias_text, alias_type, id_name[1])
 
 
 def start():

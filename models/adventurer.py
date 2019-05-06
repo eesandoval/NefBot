@@ -64,7 +64,7 @@ class Adventurer:
             result = db.query(Adventurer.id_query_text, (name,))
         if result is None or result == []:
             return 0
-        return int(result[0][0])
+        return (int(result[0][0]), result[0][1])
 
     def __init__(self, name, level=None):
         self.name = name
@@ -197,7 +197,7 @@ class Adventurer:
     LIMIT 1
     '''
     id_query_text = '''
-    SELECT AdventurerID
+    SELECT AdventurerID, Name
     FROM Adventurers
     WHERE Name LIKE '%' || ? || '%' COLLATE NOCASE
     LIMIT 1
