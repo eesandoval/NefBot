@@ -26,7 +26,7 @@ import view
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
-import models.alias
+from models.alias import create_update_alias, delete_alias
 
 async def query(criteria):
     try:
@@ -199,32 +199,30 @@ async def process_dragon_reaction(emoji, dragon, message):
     elif emoji == "\U0001F509":  # 2 unbinds
         await process_dragon(dragon.name, 2, message)
 
-async def create_alias(message):
-    print(message)
-    if ',' not in message or len(message.split(',')) != 2:
-        await view.show_missing_criteria("Missing alias, name, or format")
+async def handle_alias(message):
+    if ',' not in message or len(message.split(',')) < 1:
+        result = delete_alias(message)
+        await view.show_completed_alias(result)
         return
     alias = message.split(',')[0].strip()
     name = message.split(',')[1].strip()
     alias_type = 0
-    print(name)
-    print(alias)
     aliased_id = Adventurer.get_adventurer_id(name)
     if aliased_id != 0:
-        models.alias.create_alias(aliased_id, alias, alias_type)
-        await view.show_completed_alias()
+        result = create_update_alias(aliased_id, alias, alias_type)
+        await view.show_completed_alias(result)
         return
     alias_type += 1
     aliased_id = Wyrmprint.get_wyrmprint_id(name)
     if aliased_id != 0:
-        models.alias.create_alias(aliased_id, alias, alias_type)
-        await view.show_completed_alias()
+        result = create_update_alias(aliased_id, alias, alias_type)
+        await view.show_completed_alias(result)
         return
     alias_type += 1
     aliased_id = Dragon.get_dragon_id(name)
     if aliased_id != 0:
-        models.alias.create_alias(aliased_id, alias, alias_type)
-        await view.show_completed_alias()
+        result = create_update_alias(aliased_id, alias, alias_type)
+        await view.show_completed_alias(result)
         return
 
 

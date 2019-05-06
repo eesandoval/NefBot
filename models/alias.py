@@ -36,6 +36,47 @@ create_dragon_alias_text = '''
     INSERT INTO Aliases (DragonID, AliasText) VALUES (?, ?)
 '''
 
+update_adventurer_alias_text = '''
+    UPDATE Aliases
+    SET AdventurerID = ?
+    WHERE AliasText = ? COLLATE NOCASE
+'''
+
+update_wyrmprint_alias_text = '''
+    UPDATE Aliases
+    SET WyrmprintID = ?
+    WHERE AliasText = ? COLLATE NOCASE
+'''
+
+update_dragon_alias_text = '''
+    UPDATE Aliases
+    SET DragonID = ?
+    WHERE AliasText = ? COLLATE NOCASE
+'''
+
+find_alias_text = '''
+    SELECT 1 FROM Aliases WHERE AliasText = ? COLLATE NOCASE
+'''
+
+delete_alias_text = '''
+    DELETE FROM Aliases WHERE AliasText = ? COLLATE NOCASE
+'''
+
+
+def delete_alias(text):
+    with Database("master.db") as db:
+        db.execute(delete_alias_text, (text,))
+    return "Deleted"
+
+
+def create_update_alias(alias_id, text, alias_type):
+    with Database("master.db") as db:
+        resultset = db.query(find_alias_text, (text,))
+    if resultset is not None and len(resultset) > 0:
+        return update_alias(alias_id, text, alias_type)
+    else:
+        return create_alias(alias_id, text, alias_type)
+
 
 def create_alias(alias_id, text, alias_type):
     with Database("master.db") as db:
@@ -45,3 +86,15 @@ def create_alias(alias_id, text, alias_type):
             db.execute(create_wyrmprint_alias_text, (alias_id, text,))
         elif alias_type == 2:
             db.execute(create_dragon_alias_text, (alias_id, text,))
+    return "Created"
+
+
+def update_alias(alias_id, text, alias_type):
+    with Database("master.db") as db:
+        if alias_type == 0:
+            db.execute(update_adventurer_alias_text, (alias_id, text,))
+        elif alias_type == 1:
+            db.execute(update_wyrmprint_alias_text, (alias_id, text,))
+        elif alias_type == 2:
+            db.execute(update_dragon_alias_text, (alias_id, text,))
+    return "Updated"

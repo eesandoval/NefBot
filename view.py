@@ -120,7 +120,7 @@ async def update(context):
 async def alias(context):
     message = handle_context(context)
     await client.send_typing(channel)
-    await controller.create_alias(message)
+    await controller.handle_alias(message)
 
 
 def handle_context(context):
@@ -427,8 +427,8 @@ async def show_completed_update():
 
 
 @client.event
-async def show_completed_alias():
-    await client.send_message(channel, "Alias created")
+async def show_completed_alias(status):
+    await client.send_message(channel, "Alias {0}".format(status))
 
 
 @client.event
