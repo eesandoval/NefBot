@@ -122,108 +122,36 @@ def query_dragons(criteria):
     return Dragon.find_dragons(element, skill, ability, rarity, level)
 
 
-async def process_adventurers(name, level=None, message=None):
-    try:
-        if name is None or name == "":
-            await view.show_invalid_name()
-
-        adventurer = Adventurer(name, level)
-        if adventurer is None:
-            await view.show_adventurer_not_found(name)
-        else:
-            await view.show_adventurer(adventurer, message)
-    except Exception as e:
-        await view.show_exception(
-            "Failed to process adventurer with the following error:{0}"
-            .format(str(e)), traceback.format_exc())
+def process_adventurer(name, level=None):
+    if name is None or name == "":
+        raise KeyError("Name not specified")
+    return Adventurer(name, level)
 
 
-async def process_wyrmprint(name, level=None, message=None):
-    try:
-        if name is None or name == "":
-            await view.show_invalid_name()
-
-        wyrmprint = Wyrmprint(name, level or 3)
-        if wyrmprint is None:
-            await view.show_wyrmprint_not_found(name)
-        else:
-            await view.show_wyrmprint(wyrmprint, message)
-    except Exception as e:
-        await view.show_exception(
-            "Failed to process wyrmprint with the following error:{0}"
-            .format(str(e)), traceback.format_exc())
+def process_wyrmprint(name, level=None):
+    if name is None or name == "":
+        raise KeyError("Name not specified")
+    return Wyrmprint(name, level or 3)
 
 
-async def process_dragon(name, level=None, message=None):
-    try:
-        if name is None or name == "":
-            await view.show_invalid_name()
+def process_dragon(name, level=None):
+    if name is None or name == "":
+        raise KeyError("Name not specified")
+    return Dragon(name, level or 2)
 
-        dragon = Dragon(name, level or 2)
-        if dragon is None:
-            await view.show_dragon_not_found(name)
-        else:
-            await view.show_dragon(dragon, message)
-    except Exception as e:
-        await view.show_exception(
-            "Failed to process dragon with the following error:{0}"
-            .format(str(e)), traceback.format_exc())
 
-async def process_adventurers_reaction(emoji, adventurer, message):
-    if emoji == "\U0001F5BC":  # Full picture
-        await view.show_adventurer_full(adventurer, message)
-    elif emoji == "\U0001F508":  # 1 unbind
-        await process_adventurers(adventurer.name, 1, message)
-    elif emoji == "\U0001F509":  # 2 unbinds
-        await process_adventurers(adventurer.name, 2, message)
-    elif emoji == "\U0001F50A":  # 3 unbinds
-        await process_adventurers(adventurer.name, 3, message)
-
-async def process_wyrmprint_reaction(emoji, wyrmprint, message):
-    if emoji == "\U0001F5BC":  # Full picture
-        await view.show_wyrmprint_full(wyrmprint, message)
-    elif emoji == "\U0001F508":  # 1 unbind
-        await process_wyrmprint(wyrmprint.name, 1, message)
-    elif emoji == "\U0001F509":  # 2 unbinds
-        await process_wyrmprint(wyrmprint.name, 2, message)
-    elif emoji == "\U0001F50A":  # 3 unbinds
-        await process_wyrmprint(wyrmprint.name, 3, message)
-    elif emoji == "\U0001F3A8":  # Full base picture
-        await view.show_wyrmprint_base_full(wyrmprint, message)
-
-async def process_dragon_reaction(emoji, dragon, message):
-    if emoji == "\U0001F5BC":  # Full picture
-        await view.show_dragon_full(dragon, message)
-    elif emoji == "\U0001F508":  # 1 unbind
-        await process_dragon(dragon.name, 1, message)
-    elif emoji == "\U0001F509":  # 2 unbinds
-        await process_dragon(dragon.name, 2, message)
-
-async def handle_alias(message):
-    if ',' not in message or len(message.split(',')) < 1:
-        result = delete_alias(message)
-        await view.show_completed_alias(result)
-        return
-    alias = message.split(',')[0].strip()
-    name = message.split(',')[1].strip()
+def handle_alias(alias_text, aliased_name):
+    if aliased_name is None:
+        return delete_alias(alias_text)
     alias_type = 0
-    aliased_id = Adventurer.get_adventurer_id(name)
-    if aliased_id != 0:
-        result = create_update_alias(aliased_id, alias, alias_type)
-        await view.show_completed_alias(result)
-        return
-    alias_type += 1
-    aliased_id = Wyrmprint.get_wyrmprint_id(name)
-    if aliased_id != 0:
-        result = create_update_alias(aliased_id, alias, alias_type)
-        await view.show_completed_alias(result)
-        return
-    alias_type += 1
-    aliased_id = Dragon.get_dragon_id(name)
-    if aliased_id != 0:
-        result = create_update_alias(aliased_id, alias, alias_type)
-        await view.show_completed_alias(result)
-        return
+    lst = [Adventurer.get_adventurer_id, Wyrmprint.get_wyrmprint_id,
+           Dragon.get_dragon_id]
+    aliased_id = 0
+    alias_type = -1
+    while aliased_id == 0 and alias_type < len(lst):
+        alias_type += 1
+        aliased_id = lst[alias_type](aliased_name)
+    return create_update_alias(aliased_id, alias_text, alias_type)
 
 
 def start():

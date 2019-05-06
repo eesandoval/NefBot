@@ -23,6 +23,7 @@ SOFTWARE.
 '''
 import controller
 import discord
+import traceback
 from discord.ext.commands import Bot
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
@@ -31,10 +32,10 @@ from utils.config import Config
 from utils.parsing import convert_ISO_date_to_string, convert_args_to_dict
 
 channel = None
-active_adventurer_messages = {}
-active_wyrmprint_messages = {}
-active_dragon_messages = {}
-all_active_messages = []
+adv_msgs = {}
+wyr_msgs = {}
+dra_msgs = {}
+all_msgs = []
 config = Config("config.ini")
 client = Bot(command_prefix=config.command_start)
 
@@ -58,40 +59,60 @@ async def exit(context):
 
 
 @client.command(name="get_adventurer",
-                description="Gets an adventurer with the given name",
+                description='''
+                Searches for an adventurer using a name or alias.
+                The search is case insensitive, and in the case of multiple
+                results, the earliest released adventurer is returned.
+                ''',
                 brief="Gets an adventurer using a case insensitive search",
-                aliases=["adv", "adventurer", "a"],
-                pass_context=True)
-async def get_adventurer(context):
-    name = handle_context(context)
-    await client.send_typing(channel)
-    await controller.process_adventurers(name)
+                aliases=["adventurer", "adv", "a"])
+async def get_adventurer(name):
+    try:
+        adventurer = controller.process_adventurer(name)
+        await show_adventurer(adventurer)
+    except Exception as e:
+        await show_exception(e)
 
 
 @client.command(name="get_wyrmprint",
-                description="Gets a wyrmprint with the given name",
+                description='''
+                Searches for a wyrmprint using a name or alias.
+                The search is case insensitive, and in the case of multiple
+                results, the earliest released wyrmprint is returned.
+                ''',
                 brief="Gets a wyrmprint using a case insensitive search",
-                aliases=["wyr", "wyrmprint", "w"],
-                pass_context=True)
-async def get_wyrmprint(context):
-    name = handle_context(context)
-    await client.send_typing(channel)
-    await controller.process_wyrmprint(name)
+                aliases=["wyrmprint", "wyr", "w"])
+async def get_wyrmprint(name):
+    try:
+        wyrmprint = controller.process_wyrmprint(name)
+        await show_wyrmprint(wyrmprint)
+    except Exception as e:
+        await show_exception(e)
 
 
 @client.command(name="get_dragon",
-                description="Gets a dragon with the given name",
+                description='''
+                Searches for a dragon using a name or alias.
+                The search is case insensitive, and in the case of multiple
+                results, the earliest released dragon is returned.
+                ''',
                 brief="Gets a dragon using a case insensitive search",
-                aliases=["dra", "dragon", "d"],
-                pass_context=True)
-async def get_dragon(context):
-    name = handle_context(context)
-    await client.send_typing(channel)
-    await controller.process_dragon(name)
+                aliases=["dragon", "dra", "d"])
+async def get_dragon(name):
+    try:
+        dragon = controller.process_dragon(name)
+        await show_dragon(dragon)
+    except Exception as e:
+        await show_exception(e)
 
 
 @client.command(name="query",
-                description="Queries for anything",
+                description='''
+                Queries the database for adventurers, dragons, or
+                wyrmprints with the given criteria. Criteria is set as
+                pairs. See example below:
+                {0}query type=adv ability="Burn Res +100%"
+                '''.format(config.command_start),
                 brief="Queries for any adventurer, print, or dragon",
                 aliases=["que", "q"],
                 pass_context=True)
@@ -102,25 +123,33 @@ async def query(context):
 
 
 @client.command(name="update",
-                description="Updates the bot's config",
+                description='''
+                Resets the configuration and updates the bot using the
+                new values set in the config.ini file
+                ''',
                 brief="Updates the bot's configurations",
-                aliases=["u"],
-                pass_context=True)
-async def update(context):
-    message = handle_context(context)
+                aliases=["u"])
+async def update():
     config = Config("config.ini")
-    await show_completed_update()
+    await client.say("Update completed")
 
 
 @client.command(name="alias",
-                description="Creates a new alias to search by",
-                brief="Creates a new alias to search by",
-                aliases=["al", "ali", "alia"],
-                pass_context=True)
-async def alias(context):
-    message = handle_context(context)
-    await client.send_typing(channel)
-    await controller.handle_alias(message)
+                description='''
+                Creates, updates, and deletes aliases. Aliases are shorthand
+                or alternative ways to search for items. If the second
+                parameter of the aliased_name is not specified, this will
+                delete the alias_text from the database. If this alias
+                already exists, it will update the alias. The same alias
+                may exist that refers to an adventurer, dragon, and print.
+                ''',
+                brief="Creates a new alias to search by")
+async def alias(alias_text, aliased_name=None):
+    try:
+        alias_result = controller.handle_alias(alias_text, aliased_name)
+        await show_completed_alias(alias_result)
+    except Exception as e:
+        await show_exception(e)
 
 
 def handle_context(context):
@@ -187,11 +216,6 @@ async def show_adventurer(adventurer, message=None):
 
 
 @client.event
-async def show_adventurer_not_found(name):
-    await client.send_message(channel, "Adventurer {0} not found".format(name))
-
-
-@client.event
 async def show_wyrmprint(wyrmprint, message=None):
     url_name = "%20".join(wyrmprint.name.split())
     e = discord.Embed(title=wyrmprint.name,
@@ -214,11 +238,6 @@ async def show_wyrmprint(wyrmprint, message=None):
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description, inline=False)
     await show_or_edit_wyrmprint(e, wyrmprint, message)
-
-
-@client.event
-async def show_wyrmprint_not_found(name):
-    await client.send_message(channel, "Wyrmprint {0} not found".format(name))
 
 
 @client.event
@@ -252,16 +271,6 @@ async def show_dragon(dragon, message=None):
 
 
 @client.event
-async def show_dragon_not_found(name):
-    await client.send_message(channel, "Dragon {0} not found".format(name))
-
-
-@client.event
-async def show_invalid_name():
-    await client.send_message(channel, "Invalid/no name given")
-
-
-@client.event
 async def show_missing_criteria(missing_criteria):
     await client.send_message(channel,
                               "Missing criteria {0}".format(missing_criteria))
@@ -281,9 +290,9 @@ async def show_unknown_criteria(criteria_name, criteria):
 
 
 @client.event
-async def show_exception(message, trace_message):
-    print(trace_message)
-    await client.send_message(channel, message)
+async def show_exception(e):
+    print(traceback.format_exc())
+    await client.say(str(e))
 
 
 def get_emoji_element(elementtype):
@@ -310,32 +319,70 @@ def get_emoji_limited(limited):
 
 @client.event
 async def on_reaction_add(reaction, user):
-    if (reaction.message.id in active_adventurer_messages and
-            reaction.emoji in config.adventurer_reactions and
-            user != client.user):
-        await client.remove_reaction(reaction.message, reaction.emoji, user)
-        await controller.process_adventurers_reaction(
-            reaction.emoji,
-            active_adventurer_messages[reaction.message.id],
-            reaction.message)
+    if user == client.user:
+        return
 
-    elif (reaction.message.id in active_wyrmprint_messages and
-            reaction.emoji in config.wyrmprint_reactions and
-            user != client.user):
+    emoji = reaction.emoji
+    message = reaction.message
+    if (message.id in adv_msgs and emoji in config.adventurer_reactions):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
-        await controller.process_wyrmprint_reaction(
-            reaction.emoji,
-            active_wyrmprint_messages[reaction.message.id],
-            reaction.message)
+        adventurer = adv_msgs[message.id]
+        await process_adventurers_reaction(emoji, adventurer, message)
 
-    elif (reaction.message.id in active_dragon_messages and
-            reaction.emoji in config.dragon_reactions and
-            user != client.user):
+    elif (message.id in wyr_msgs and emoji in config.wyrmprint_reactions):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
-        await controller.process_dragon_reaction(
-            reaction.emoji,
-            active_dragon_messages[reaction.message.id],
-            reaction.message)
+        wyrmprint = wyr_msgs[message.id]
+        await process_wyrmprint_reaction(emoji, wyrmprint, message)
+
+    elif (message.id in dra_msgs and emoji in config.dragon_reactions):
+        await client.remove_reaction(reaction.message, reaction.emoji, user)
+        dragon = dra_msgs[message.id]
+        await process_dragon_reaction(emoji, dragon, message)
+
+
+@client.event
+async def process_adventurers_reaction(emoji, adventurer, message):
+    if emoji == "\U0001F5BC":  # Full picture
+        await show_adventurer_full(adventurer, message)
+        return
+
+    adventurer = controller.process_adventurer(adventurer.name,
+                                               get_level(emoji))
+    await show_adventurer(adventurer, message)
+
+
+@client.event
+async def process_wyrmprint_reaction(emoji, wyrmprint, message):
+    if emoji == "\U0001F5BC":  # Full picture
+        await show_wyrmprint_full(wyrmprint, message)
+        return
+    elif emoji == "\U0001F3A8":  # Full base picture
+        await show_wyrmprint_base_full(wyrmprint, message)
+        return
+
+    wyrmprint = controller.process_wyrmprint(wyrmprint.name, get_level(emoji))
+    await show_wyrmprint(wyrmprint, message)
+
+
+@client.event
+async def process_dragon_reaction(emoji, dragon, message):
+    if emoji == "\U0001F5BC":  # Full picture
+        await show_dragon_full(dragon, message)
+        return
+
+    dragon = controller.process_dragon(dragon.name, get_level(emoji))
+    await show_dragon(dragon, message)
+
+
+def get_level(emoji):
+    level = 1
+    if emoji == "\U0001F508":  # 1 unbind
+        level = 1
+    elif emoji == "\U0001F509":  # 2 unbinds
+        level = 2
+    elif emoji == "\U0001F50A":  # 3 unbinds
+        level = 3
+    return level
 
 
 @client.event
@@ -382,11 +429,11 @@ async def show_dragon_full(dragon, message=None):
 @client.event
 async def show_or_edit_adventurer(e, adventurer, message=None):
     if message is None:
-        global active_adventurer_messages, all_active_messages
+        global adv_msgs, all_msgs
         await clear_active_messages()
-        msg = await client.send_message(channel, embed=e)
-        active_adventurer_messages[msg.id] = adventurer
-        all_active_messages.append(msg)
+        msg = await client.say(embed=e)
+        adv_msgs[msg.id] = adventurer
+        all_msgs.append(msg)
         for emoji in config.adventurer_reactions:
             await client.add_reaction(msg, emoji)
     else:
@@ -396,11 +443,11 @@ async def show_or_edit_adventurer(e, adventurer, message=None):
 @client.event
 async def show_or_edit_wyrmprint(e, wyrmprint, message=None):
     if message is None:
-        global active_wyrmprint_messages, all_active_messages
+        global wyr_msgs, all_msgs
         await clear_active_messages()
-        msg = await client.send_message(channel, embed=e)
-        active_wyrmprint_messages[msg.id] = wyrmprint
-        all_active_messages.append(msg)
+        msg = await client.say(embed=e)
+        wyr_msgs[msg.id] = wyrmprint
+        all_msgs.append(msg)
         for emoji in config.wyrmprint_reactions:
             await client.add_reaction(msg, emoji)
     else:
@@ -410,11 +457,11 @@ async def show_or_edit_wyrmprint(e, wyrmprint, message=None):
 @client.event
 async def show_or_edit_dragon(e, dragon, message=None):
     if message is None:
-        global active_dragon_messages
+        global dra_msgs
         await clear_active_messages()
-        msg = await client.send_message(channel, embed=e)
-        active_dragon_messages[msg.id] = dragon
-        all_active_messages.append(msg)
+        msg = await client.say(embed=e)
+        dra_msgs[msg.id] = dragon
+        all_msgs.append(msg)
         for emoji in config.dragon_reactions:
             await client.add_reaction(msg, emoji)
     else:
@@ -422,27 +469,22 @@ async def show_or_edit_dragon(e, dragon, message=None):
 
 
 @client.event
-async def show_completed_update():
-    await client.send_message(channel, "Update complete")
-
-
-@client.event
 async def show_completed_alias(status):
-    await client.send_message(channel, "Alias {0}".format(status))
+    await client.say("Alias {0}".format(status))
 
 
 @client.event
 async def clear_active_messages():
-    global all_active_messages, active_adventurer_messages, \
-        active_dragon_messages, active_wyrmprint_messages
+    global all_msgs, adv_msgs, \
+        dra_msgs, wyr_msgs
 
-    while len(all_active_messages) > max(0, config.message_limit - 1):
-        message = all_active_messages.pop(0)
+    while len(all_msgs) > max(0, config.message_limit - 1):
+        message = all_msgs.pop(0)
         await client.clear_reactions(message)
 
-        if message.id in active_adventurer_messages:
-            active_adventurer_messages.pop(message.id)
-        elif message.id in active_dragon_messages:
-            active_dragon_messages.pop(message.id)
-        elif message.id in active_wyrmprint_messages:
-            active_wyrmprint_messages.pop(message.id)
+        if message.id in adv_msgs:
+            adv_msgs.pop(message.id)
+        elif message.id in dra_msgs:
+            dra_msgs.pop(message.id)
+        elif message.id in wyr_msgs:
+            wyr_msgs.pop(message.id)
