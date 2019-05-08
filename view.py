@@ -68,7 +68,7 @@ async def exit(context):
                 ''',
                 brief="Gets an adventurer using a case insensitive search",
                 aliases=["adventurer", "adv", "a"])
-async def get_adventurer(name):
+async def get_adventurer(ctx, *, name):
     try:
         adventurer = controller.process_adventurer(name)
         await show_adventurer(adventurer)
@@ -84,7 +84,7 @@ async def get_adventurer(name):
                 ''',
                 brief="Gets a wyrmprint using a case insensitive search",
                 aliases=["wyrmprint", "wyr", "w"])
-async def get_wyrmprint(name):
+async def get_wyrmprint(ctx, *, name):
     try:
         wyrmprint = controller.process_wyrmprint(name)
         await show_wyrmprint(wyrmprint)
@@ -100,7 +100,7 @@ async def get_wyrmprint(name):
                 ''',
                 brief="Gets a dragon using a case insensitive search",
                 aliases=["dragon", "dra", "d"])
-async def get_dragon(name):
+async def get_dragon(ctx, *, name):
     try:
         dragon = controller.process_dragon(name)
         await show_dragon(dragon)
@@ -116,7 +116,7 @@ async def get_dragon(name):
                 ''',
                 brief="Gets a weapon using a case insensitive search",
                 aliases=["weapon", "wep"])
-async def get_weapon(name):
+async def get_weapon(ctx, *, name):
     try:
         weapon = controller.process_weapon(name)
         await show_weapon(weapon)
@@ -148,6 +148,7 @@ async def query(context):
                 brief="Updates the bot's configurations",
                 aliases=["u"])
 async def update():
+    global config
     config = Config("config.ini")
     await client.say("Update completed")
 
