@@ -67,7 +67,8 @@ async def exit(context):
                 results, the earliest released adventurer is returned.
                 ''',
                 brief="Gets an adventurer using a case insensitive search",
-                aliases=["adventurer", "adv", "a"])
+                aliases=["adventurer", "adv", "a"],
+                pass_context=True)
 async def get_adventurer(ctx, *, name):
     try:
         adventurer = controller.process_adventurer(name)
@@ -83,7 +84,8 @@ async def get_adventurer(ctx, *, name):
                 results, the earliest released wyrmprint is returned.
                 ''',
                 brief="Gets a wyrmprint using a case insensitive search",
-                aliases=["wyrmprint", "wyr", "w"])
+                aliases=["wyrmprint", "wyr", "w"],
+                pass_context=True)
 async def get_wyrmprint(ctx, *, name):
     try:
         wyrmprint = controller.process_wyrmprint(name)
@@ -99,7 +101,8 @@ async def get_wyrmprint(ctx, *, name):
                 results, the earliest released dragon is returned.
                 ''',
                 brief="Gets a dragon using a case insensitive search",
-                aliases=["dragon", "dra", "d"])
+                aliases=["dragon", "dra", "d"],
+                pass_context=True)
 async def get_dragon(ctx, *, name):
     try:
         dragon = controller.process_dragon(name)
@@ -115,7 +118,8 @@ async def get_dragon(ctx, *, name):
                 results, the earliest released weapon is returned.
                 ''',
                 brief="Gets a weapon using a case insensitive search",
-                aliases=["weapon", "wep"])
+                aliases=["weapon", "wep"],
+                pass_context=True)
 async def get_weapon(ctx, *, name):
     try:
         weapon = controller.process_weapon(name)
