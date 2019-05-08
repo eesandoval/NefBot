@@ -49,6 +49,8 @@ class Config:
                                     "\U0001F508", "\U0001F509",
                                     "\U0001F50A"]
         self.dragon_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
+        self.weapon_reactions = ["\U0001F508", "\U0001F509",
+                                 "\U000023EA", "\U000023E9"]
         self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',')
         self.streaming = config.getboolean("Discord", "Streaming")
         if config.has_option("Discord", "MessageLimit"):

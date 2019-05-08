@@ -28,6 +28,7 @@ from discord.ext.commands import Bot
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
+from models.weapon import Weapon
 from utils.config import Config
 from utils.parsing import convert_ISO_date_to_string, convert_args_to_dict
 
@@ -35,6 +36,7 @@ channel = None
 adv_msgs = {}
 wyr_msgs = {}
 dra_msgs = {}
+wep_msgs = {}
 all_msgs = []
 config = Config("config.ini")
 client = Bot(command_prefix=config.command_start)
@@ -102,6 +104,22 @@ async def get_dragon(name):
     try:
         dragon = controller.process_dragon(name)
         await show_dragon(dragon)
+    except Exception as e:
+        await show_exception(e)
+
+
+@client.command(name="get_weapon",
+                description='''
+                Searches for a weapon using a name or alias.
+                The search is case insensitive, and in the case of multiple
+                results, the earliest released weapon is returned.
+                ''',
+                brief="Gets a weapon using a case insensitive search",
+                aliases=["weapon", "wep"])
+async def get_weapon(name):
+    try:
+        weapon = controller.process_weapon(name)
+        await show_weapon(weapon)
     except Exception as e:
         await show_exception(e)
 
@@ -271,6 +289,42 @@ async def show_dragon(dragon, message=None):
 
 
 @client.event
+async def show_weapon(weapon, message=None):
+    url_name = "%20".join(weapon.name.split())
+    e = discord.Embed(title=weapon.name,
+                      desc=weapon.name,
+                      url=config.gamepedia_url.format(url_name))
+    sub_portrait_URL = "weapons/portraits/{0}.png".format(url_name)
+    portrait_URL = config.picture_server + sub_portrait_URL
+    e.set_thumbnail(url=portrait_URL)
+    e.add_field(name="Unit Type",
+                value=get_emoji_element(weapon.elementtype) +
+                get_emoji_weapon(weapon.weapontype) +
+                get_emoji_limited(weapon.limited),
+                inline=True)
+    e.add_field(name="Rarity", value=get_emoji_rarity(weapon.rarity),
+                inline=True)
+    e.add_field(name="Max HP/Max STR",
+                value="{0}/{1}".format(weapon.maxhp, weapon.maxstr),
+                inline=True)
+    e.add_field(name="Release Date",
+                value=convert_ISO_date_to_string(weapon.releasedate),
+                inline=True)
+    skill_format = "Skill: {0} [SP Cost: {1}] [Frame Time: {2}]"
+    ability_format = "Ability: {0}"
+    for skill in weapon.skills:
+        e.add_field(name=skill_format.format(skill.name, skill.spcost,
+                                             skill.frametime),
+                    value=skill.description,
+                    inline=False)
+    for ability in weapon.abilities:
+        e.add_field(name=ability_format.format(ability.name),
+                    value=ability.description,
+                    inline=False)
+    await show_or_edit_weapon(e, weapon, message)
+
+
+@client.event
 async def show_missing_criteria(missing_criteria):
     await client.send_message(channel,
                               "Missing criteria {0}".format(missing_criteria))
@@ -296,7 +350,10 @@ async def show_exception(e):
 
 
 def get_emoji_element(elementtype):
-    return config.element_emoji[elementtype]
+    try:
+        return config.element_emoji[elementtype]
+    except KeyError:
+        return ""
 
 
 def get_emoji_weapon(weapontype):
@@ -339,6 +396,11 @@ async def on_reaction_add(reaction, user):
         dragon = dra_msgs[message.id]
         await process_dragon_reaction(emoji, dragon, message)
 
+    elif (message.id in wep_msgs and emoji in config.weapon_reactions):
+        await client.remove_reaction(reaction.message, reaction.emoji, user)
+        weapon = wep_msgs[message.id]
+        await process_weapon_reaction(emoji, weapon, message)
+
 
 @client.event
 async def process_adventurers_reaction(emoji, adventurer, message):
@@ -372,6 +434,19 @@ async def process_dragon_reaction(emoji, dragon, message):
 
     dragon = controller.process_dragon(dragon.name, get_level(emoji))
     await show_dragon(dragon, message)
+
+
+@client.event
+async def process_weapon_reaction(emoji, weapon, message):
+    if emoji == "\U000023E9":  # Upgrades To
+        await show_weapon_upgrades_to(weapon, message)
+        return
+    elif emoji == "\U000023EA":  # Upgrades From
+        await show_weapon_upgrades_from(weapon, message)
+        return
+
+    weapon = controller.process_weapon(weapon.name, get_level(emoji))
+    await show_weapon(weapon, message)
 
 
 def get_level(emoji):
@@ -427,6 +502,28 @@ async def show_dragon_full(dragon, message=None):
 
 
 @client.event
+async def show_weapon_upgrades_to(weapon, message=None):
+    url_name = "%20".join(weapon.name.split())
+    e = discord.Embed(title="{0} - Upgrades To".format(weapon.name),
+                      desc="Upgrades To",
+                      url=config.gamepedia_url.format(url_name))
+    for upgrade_to in weapon.upgrades_to:
+        e.add_field(name=upgrade_to, value="No Data", inline=False)
+    await show_or_edit_weapon(e, weapon, message)
+
+
+@client.event
+async def show_weapon_upgrades_from(weapon, message=None):
+    url_name = "%20".join(weapon.name.split())
+    e = discord.Embed(title="{0} - Upgrades From".format(weapon.name),
+                      desc="Upgrades From",
+                      url=config.gamepedia_url.format(url_name))
+    for upgrade_from in weapon.upgrades_from:
+        e.add_field(name=upgrade_from, value="No Data", inline=False)
+    await show_or_edit_weapon(e, weapon, message)
+
+
+@client.event
 async def show_or_edit_adventurer(e, adventurer, message=None):
     if message is None:
         global adv_msgs, all_msgs
@@ -469,9 +566,23 @@ async def show_or_edit_dragon(e, dragon, message=None):
 
 
 @client.event
+async def show_or_edit_weapon(e, weapon, message=None):
+    if message is None:
+        global adv_msgs, all_msgs
+        await clear_active_messages()
+        msg = await client.say(embed=e)
+        wep_msgs[msg.id] = weapon
+        all_msgs.append(msg)
+        for emoji in config.weapon_reactions:
+            await client.add_reaction(msg, emoji)
+    else:
+        msg = await client.edit_message(message, embed=e)
+
+
+@client.event
 async def clear_active_messages():
     global all_msgs, adv_msgs, \
-        dra_msgs, wyr_msgs
+        dra_msgs, wyr_msgs, wep_msgs
 
     while len(all_msgs) > max(0, config.message_limit - 1):
         message = all_msgs.pop(0)
@@ -483,3 +594,5 @@ async def clear_active_messages():
             dra_msgs.pop(message.id)
         elif message.id in wyr_msgs:
             wyr_msgs.pop(message.id)
+        elif message.id in wep_msgs:
+            wep_msgs.pop(message.id)

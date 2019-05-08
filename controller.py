@@ -26,6 +26,7 @@ import view
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
+from models.weapon import Weapon
 from models.alias import create_update_alias, delete_alias
 
 async def query(criteria):
@@ -40,7 +41,7 @@ async def query(criteria):
             for adventurer in adventurers:
                 await view.show_adventurer(adventurer)
 
-        elif criteria["type"].startswith("w"):
+        elif criteria["type"].startswith("wy"):
             wyrmprints = query_wyrmprints(criteria)
             if wyrmprints is None or wyrmprints == []:
                 await view.show_no_results_found()
@@ -53,6 +54,13 @@ async def query(criteria):
                 await view.show_no_results_found()
             for dragon in dragons:
                 await view.show_dragon(dragon)
+
+        elif criteria["type"].startswith("we"):
+            weapons = query_weapons(criteria)
+            if weapons is None or weapons == []:
+                await view.show_no_results_found()
+            for weapon in weapons:
+                await view.show_weapon(weapon)
 
         else:
             await view.show_unknown_criteria("type", criteria["type"])
@@ -122,6 +130,28 @@ def query_dragons(criteria):
     return Dragon.find_dragons(element, skill, ability, rarity, level)
 
 
+def query_weapons(criteria):
+    element = None
+    weapon = None
+    skill = None
+    ability = None
+    rarity = None
+    if "element" in criteria:
+        element = criteria["element"]
+    if "weapon" in criteria:
+        weapon = criteria["weapon"]
+    if "skill" in criteria:
+        skill = criteria["skill"]
+    if "ability" in criteria:
+        ability = criteria["ability"]
+    if "rarity" in criteria:
+        rarity = criteria["rarity"]
+    if (element is None and skill is None and weapon is None and
+            ability is None and rarity is None):
+        return []
+    return Weapon.find_weapons(element, weapon, skill, ability, rarity)
+
+
 def process_adventurer(name, level=None):
     if name is None or name == "":
         raise KeyError("Name not specified")
@@ -140,12 +170,18 @@ def process_dragon(name, level=None):
     return Dragon(name, level or 2)
 
 
+def process_weapon(name, level=None):
+    if name is None or name == "":
+        raise KeyError("Name not specified")
+    return Weapon(name, level or 2)
+
+
 def handle_alias(alias_text, aliased_name):
     if aliased_name is None:
         return delete_alias(alias_text)
     alias_type = 0
     lst = [Adventurer.get_adventurer_id, Wyrmprint.get_wyrmprint_id,
-           Dragon.get_dragon_id]
+           Dragon.get_dragon_id, Weapon.get_weapon_id]
     id_name = (0, "")
     alias_type = -1
     while id_name[0] == 0 and alias_type + 1 < len(lst):

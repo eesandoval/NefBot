@@ -36,6 +36,10 @@ create_dragon_alias_text = '''
     INSERT INTO Aliases (DragonID, AliasText) VALUES (?, ?)
 '''
 
+create_weapon_alias_text = '''
+    INSERT INTO Aliases (WeaponID, AliasText) VALUES (?, ?)
+'''
+
 update_adventurer_alias_text = '''
     UPDATE Aliases
     SET AdventurerID = ?
@@ -51,6 +55,12 @@ update_wyrmprint_alias_text = '''
 update_dragon_alias_text = '''
     UPDATE Aliases
     SET DragonID = ?
+    WHERE AliasText = ? COLLATE NOCASE
+'''
+
+update_weapon_alias_text = '''
+    UPDATE Aliases
+    SET WeaponID = ?
     WHERE AliasText = ? COLLATE NOCASE
 '''
 
@@ -90,6 +100,9 @@ def create_alias(alias_id, text, alias_type, aliased_name):
         elif alias_type == 2:
             result = result.format(text, aliased_name, "Dragon")
             db.execute(create_dragon_alias_text, (alias_id, text,))
+        elif alias_type == 3:
+            result = result.format(text, aliased_name, "Weapon")
+            db.execute(create_weapon_alias_text, (alias_id, text,))
     return result
 
 
@@ -105,4 +118,7 @@ def update_alias(alias_id, text, alias_type, aliased_name):
         elif alias_type == 2:
             result = result.format(text, aliased_name, "Dragon")
             db.execute(update_dragon_alias_text, (alias_id, text,))
+        elif alias_type == 3:
+            result = result.format(text, aliased_name, "Weapon")
+            db.execute(update_weapon_alias_text, (alias_id, text,))
     return result
