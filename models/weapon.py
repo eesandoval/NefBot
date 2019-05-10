@@ -114,17 +114,30 @@ class Weapon:
 
     def _get_upgrades_to(self, db):
         self.upgrades_to = []
+        self.upgrades_to_materials = []
         result = db.query(Weapon.upgrades_to_query_text,
                           (self.weaponid,))
         for upgrade_to in result or []:
             self.upgrades_to.append(upgrade_to[0])
+            self.upgrades_to_materials.append(self._get_materials(
+                                              upgrade_to[1], db))
 
     def _get_upgrades_from(self, db):
         self.upgrades_from = []
+        self.upgrades_from_materials = []
         result = db.query(Weapon.upgrades_from_query_text,
                           (self.weaponid,))
         for upgrade_from in result or []:
             self.upgrades_from.append(upgrade_from[0])
+            self.upgrades_from_materials.append(self._get_materials(
+                                                upgrade_from[1], db))
+
+    def _get_materials(self, weaponid, db):
+        result = db.query(Weapon.materials_query_text, (weaponid,))
+        materials = {}
+        for material in result or []:
+            materials[material[0]] = material[1]
+        return materials
 
     weapon_query_text = '''
     SELECT D.WeaponID
@@ -172,6 +185,7 @@ class Weapon:
 
     upgrades_to_query_text = '''
     SELECT WTo.Name
+        , WTo.WeaponID
     FROM  WeaponUpgrades WU
         INNER JOIN Weapons WTo ON WTo.WeaponID = WU.WeaponToID
     WHERE WU.WeaponFromID = ?
@@ -179,9 +193,18 @@ class Weapon:
 
     upgrades_from_query_text = '''
     SELECT WFrom.Name
+        , WFrom.WeaponID
     FROM WeaponUpgrades WU
         INNER JOIN Weapons WFrom ON WFrom.WeaponID = WU.WeaponFromID
     WHERE WU.WeaponToID = ?
+    '''
+
+    materials_query_text = '''
+    SELECT M.Name
+        , WM.Quantity
+    FROM WeaponMaterials WM
+        INNER JOIN Materials M ON M.MaterialID = WM.MaterialID
+    WHERE WM.WeaponID = ?
     '''
 
     weapon_search_query_text = '''

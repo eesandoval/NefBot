@@ -43,23 +43,27 @@ class Config:
         self.rarity_emoji = {int(k): v
                              for k, v in config.items("RarityEmojis")}
         self.picture_server = config["Other"]["PictureServer"]
-        self.adventurer_reactions = ["\U0001F5BC", "\U0001F508",
-                                     "\U0001F509", "\U0001F50A"]
-        self.wyrmprint_reactions = ["\U0001F5BC", "\U0001F3A8",
-                                    "\U0001F508", "\U0001F509",
-                                    "\U0001F50A"]
-        self.dragon_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
-        self.weapon_reactions = ["\U0001F508", "\U0001F509",
-                                 "\U000023EA", "\U000023E9"]
+        self._set_reactions()
         self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',')
         self.streaming = config.getboolean("Discord", "Streaming")
-        if config.has_option("Discord", "MessageLimit"):
-            self.message_limit = config.getint("Discord", "MessageLimit")
-        else:
-            self.message_limit = 1
-        self.limited_emoji = "<:limited:571981149497196575>"
-        self.gamepedia_url = "https://dragalialost.gamepedia.com/{0}"
+        self.message_limit = config.getint("Discord", "MessageLimit")
+        self.limited_emoji = config["OtherEmojis"]["Limited"]
+        self.eldwater_emoji = config["OtherEmojis"]["Eldwater"]
+        self.gamepedia_url = config["Other"]["GamepediaURL"] + "{0}"
+        self.element_colors = dict(config.items("ElementColors"))
 
     def set_config_file(self, config_file):
         project_root = dirname(dirname(__file__))
         self.config_file = join(project_root, config_file)
+
+    def _set_reactions(self):
+        self.adv_reactions = ["\U0001F5BC", "\U0001F508",
+                              "\U0001F509", "\U0001F50A"]
+
+        self.wyr_reactions = ["\U0001F5BC", "\U0001F3A8",
+                              "\U0001F508", "\U0001F509", "\U0001F50A"]
+
+        self.dra_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F50A"]
+
+        self.wep_reactions = ["\U0001F508", "\U0001F50A",
+                              "\U000023EA", "\U000023E9"]

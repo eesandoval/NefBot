@@ -198,76 +198,72 @@ async def on_ready():
 
 
 @client.event
-async def show_adventurer(adventurer, message=None):
-    url_name = "%20".join(adventurer.name.split())
-    e = discord.Embed(title=adventurer.name + " - " + adventurer.title,
-                      desc=adventurer.title,
-                      url=config.gamepedia_url.format(url_name))
+async def show_adventurer(adv, message=None):
+    url_name = "%20".join(adv.name.split())
+    e = discord.Embed(title=adv.name + " - " + adv.title,
+                      desc=adv.title,
+                      url=config.gamepedia_url.format(url_name),
+                      color=get_color(adv.elementtype))
     sub_portrait_URL = "adventurers/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
-    e.add_field(name="Unit Type",
-                value=get_emoji_element(adventurer.elementtype) +
-                get_emoji_weapon(adventurer.weapontype) +
-                get_emoji_unit(adventurer.unittype) +
-                get_emoji_limited(adventurer.limited),
+    e.add_field(name=get_emoji_rarity(adv.rarity),
+                value="**HP** {0}\n**STR** {1}\n**DEF** {2}\n**Co-Op** {3}"
+                .format(adv.maxhp, adv.maxstr, adv.defense, adv.maxcoop),
                 inline=True)
-    e.add_field(name="Rarity", value=get_emoji_rarity(adventurer.rarity),
-                inline=True)
-    e.add_field(name="Max HP/Max STR",
-                value="{0}/{1}".format(adventurer.maxhp, adventurer.maxstr),
-                inline=True)
-    e.add_field(name="Max Co-Op Ability", value=adventurer.maxcoop,
-                inline=True)
-    e.add_field(name="Defense", value=adventurer.defense,
-                inline=True)
-    e.add_field(name="Release Date",
-                value=convert_ISO_date_to_string(adventurer.releasedate),
+    e.add_field(name=get_emoji_element(adv.elementtype) +
+                get_emoji_weapon(adv.weapontype) +
+                get_emoji_unit(adv.unittype) +
+                get_emoji_limited(adv.limited),
+                value="**Released**\n{0}"
+                .format(convert_ISO_date_to_string(adv.releasedate)),
                 inline=True)
     skill_format = "Skill: {0} [SP Cost: {1}] [Frame Time: {2}]"
     ability_format = "Ability: {0}"
-    for skill in adventurer.skills:
+    for skill in adv.skills:
         e.add_field(name=skill_format.format(skill.name, skill.spcost,
                                              skill.frametime),
                     value=skill.description,
                     inline=False)
-    for ability in adventurer.abilities:
+    for ability in adv.abilities:
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description,
                     inline=False)
-    await show_or_edit_adventurer(e, adventurer, message)
+    await show_or_edit_adventurer(e, adv, message)
 
 
 @client.event
-async def show_wyrmprint(wyrmprint, message=None):
-    url_name = "%20".join(wyrmprint.name.split())
-    e = discord.Embed(title=wyrmprint.name,
-                      desc=wyrmprint.name,
-                      url=config.gamepedia_url.format(url_name))
+async def show_wyrmprint(wyr, message=None):
+    url_name = "%20".join(wyr.name.split())
+    e = discord.Embed(title=wyr.name,
+                      desc=wyr.name,
+                      url=config.gamepedia_url.format(url_name),
+                      color=get_color(None))
     sub_portrait_URL = "wyrmprints/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
-    e.add_field(name="Rarity", value=get_emoji_rarity(wyrmprint.rarity),
+    e.add_field(name=get_emoji_eldwater(wyr.rarity) +
+                get_emoji_rarity(wyr.rarity),
+                value="**HP** {0}\n**STR** {1}"
+                .format(wyr.maxhp, wyr.maxstr),
                 inline=True)
-    e.add_field(name="Max HP/Max STR",
-                value="{0}/{1}".format(wyrmprint.maxhp, wyrmprint.maxstr),
-                inline=True)
-    e.add_field(name="Release Date",
-                value=convert_ISO_date_to_string(wyrmprint.releasedate) +
-                get_emoji_limited(wyrmprint.limited),
+    e.add_field(name=get_emoji_limited(wyr.limited),
+                value="**Released**\n{0}"
+                .format(convert_ISO_date_to_string(wyr.releasedate)),
                 inline=True)
     ability_format = "Ability: {0}"
-    for ability in wyrmprint.abilities:
+    for ability in wyr.abilities:
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description, inline=False)
-    await show_or_edit_wyrmprint(e, wyrmprint, message)
+    await show_or_edit_wyrmprint(e, wyr, message)
 
 
 @client.event
 async def show_dragon(dragon, message=None):
     url_name = "%20".join(dragon.name.split())
     e = discord.Embed(title=dragon.name, desc=dragon.name,
-                      url=config.gamepedia_url.format(url_name))
+                      url=config.gamepedia_url.format(url_name),
+                      color=get_color(dragon.elementtype))
     sub_portrait_URL = "dragons/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
@@ -294,39 +290,35 @@ async def show_dragon(dragon, message=None):
 
 
 @client.event
-async def show_weapon(weapon, message=None):
-    url_name = "%20".join(weapon.name.split())
-    e = discord.Embed(title=weapon.name,
-                      desc=weapon.name,
-                      url=config.gamepedia_url.format(url_name))
+async def show_weapon(wep, message=None):
+    url_name = "%20".join(wep.name.split())
+    e = discord.Embed(title=wep.name,
+                      desc=wep.name,
+                      url=config.gamepedia_url.format(url_name),
+                      color=get_color(wep.elementtype))
     sub_portrait_URL = "weapons/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
-    e.add_field(name="Unit Type",
-                value=get_emoji_element(weapon.elementtype) +
-                get_emoji_weapon(weapon.weapontype) +
-                get_emoji_limited(weapon.limited),
+    e.add_field(name=get_emoji_rarity(wep.rarity),
+                value="**HP** {0}\n**STR** {1}".format(wep.maxhp, wep.maxstr),
                 inline=True)
-    e.add_field(name="Rarity", value=get_emoji_rarity(weapon.rarity),
-                inline=True)
-    e.add_field(name="Max HP/Max STR",
-                value="{0}/{1}".format(weapon.maxhp, weapon.maxstr),
-                inline=True)
-    e.add_field(name="Release Date",
-                value=convert_ISO_date_to_string(weapon.releasedate),
+    e.add_field(name=get_emoji_element(wep.elementtype) +
+                get_emoji_weapon(wep.weapontype) +
+                get_emoji_limited(wep.limited),
+                value=convert_ISO_date_to_string(wep.releasedate),
                 inline=True)
     skill_format = "Skill: {0} [SP Cost: {1}] [Frame Time: {2}]"
     ability_format = "Ability: {0}"
-    for skill in weapon.skills:
+    for skill in wep.skills:
         e.add_field(name=skill_format.format(skill.name, skill.spcost,
                                              skill.frametime),
                     value=skill.description,
                     inline=False)
-    for ability in weapon.abilities:
+    for ability in wep.abilities:
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description,
                     inline=False)
-    await show_or_edit_weapon(e, weapon, message)
+    await show_or_edit_weapon(e, wep, message)
 
 
 @client.event
@@ -379,6 +371,21 @@ def get_emoji_limited(limited):
     return ""
 
 
+def get_color(elementtype):
+    if elementtype is None:
+        return 0x00eaff
+    return int(config.element_colors[elementtype], 16)
+
+
+def get_emoji_eldwater(rarity):
+    cost = 1700
+    if rarity == 4:
+        cost = 17000
+    elif rarity == 5:
+        cost = 37000
+    return "{0} x{1}".format(config.eldwater_emoji, str(cost))
+
+
 @client.event
 async def on_reaction_add(reaction, user):
     if user == client.user:
@@ -386,22 +393,22 @@ async def on_reaction_add(reaction, user):
 
     emoji = reaction.emoji
     message = reaction.message
-    if (message.id in adv_msgs and emoji in config.adventurer_reactions):
+    if (message.id in adv_msgs and emoji in config.adv_reactions):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
         adventurer = adv_msgs[message.id]
         await process_adventurers_reaction(emoji, adventurer, message)
 
-    elif (message.id in wyr_msgs and emoji in config.wyrmprint_reactions):
+    elif (message.id in wyr_msgs and emoji in config.wyr_reactions):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
         wyrmprint = wyr_msgs[message.id]
         await process_wyrmprint_reaction(emoji, wyrmprint, message)
 
-    elif (message.id in dra_msgs and emoji in config.dragon_reactions):
+    elif (message.id in dra_msgs and emoji in config.dra_reactions):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
         dragon = dra_msgs[message.id]
         await process_dragon_reaction(emoji, dragon, message)
 
-    elif (message.id in wep_msgs and emoji in config.weapon_reactions):
+    elif (message.id in wep_msgs and emoji in config.wep_reactions):
         await client.remove_reaction(reaction.message, reaction.emoji, user)
         weapon = wep_msgs[message.id]
         await process_weapon_reaction(emoji, weapon, message)
@@ -512,8 +519,12 @@ async def show_weapon_upgrades_to(weapon, message=None):
     e = discord.Embed(title="{0} - Upgrades To".format(weapon.name),
                       desc="Upgrades To",
                       url=config.gamepedia_url.format(url_name))
-    for upgrade_to in weapon.upgrades_to:
-        e.add_field(name=upgrade_to, value="No Data", inline=False)
+    for i in range(0, len(weapon.upgrades_to)):
+        materials_str = ""
+        upgrade_to = weapon.upgrades_to[i]
+        for mat, qty in weapon.upgrades_to_materials[i].items():
+            materials_str += "{0} - *{1}*\n".format(mat, str(qty))
+        e.add_field(name=upgrade_to, value=materials_str, inline=False)
     await show_or_edit_weapon(e, weapon, message)
 
 
@@ -523,8 +534,13 @@ async def show_weapon_upgrades_from(weapon, message=None):
     e = discord.Embed(title="{0} - Upgrades From".format(weapon.name),
                       desc="Upgrades From",
                       url=config.gamepedia_url.format(url_name))
+    for i in range(0, len(weapon.upgrades_from)):
+        materials_str = ""
+        upgrade_from = weapon.upgrades_from[i]
+        for mat, qty in weapon.upgrades_from_materials[i].items():
+            materials_str += "{0} - *{1}*\n".format(mat, str(qty))
     for upgrade_from in weapon.upgrades_from:
-        e.add_field(name=upgrade_from, value="No Data", inline=False)
+        e.add_field(name=upgrade_from, value=materials_str, inline=False)
     await show_or_edit_weapon(e, weapon, message)
 
 
@@ -536,7 +552,7 @@ async def show_or_edit_adventurer(e, adventurer, message=None):
         msg = await client.say(embed=e)
         adv_msgs[msg.id] = adventurer
         all_msgs.append(msg)
-        for emoji in config.adventurer_reactions:
+        for emoji in config.adv_reactions:
             await client.add_reaction(msg, emoji)
     else:
         msg = await client.edit_message(message, embed=e)
@@ -550,7 +566,7 @@ async def show_or_edit_wyrmprint(e, wyrmprint, message=None):
         msg = await client.say(embed=e)
         wyr_msgs[msg.id] = wyrmprint
         all_msgs.append(msg)
-        for emoji in config.wyrmprint_reactions:
+        for emoji in config.wyr_reactions:
             await client.add_reaction(msg, emoji)
     else:
         msg = await client.edit_message(message, embed=e)
@@ -564,7 +580,7 @@ async def show_or_edit_dragon(e, dragon, message=None):
         msg = await client.say(embed=e)
         dra_msgs[msg.id] = dragon
         all_msgs.append(msg)
-        for emoji in config.dragon_reactions:
+        for emoji in config.dra_reactions:
             await client.add_reaction(msg, emoji)
     else:
         msg = await client.edit_message(message, embed=e)
@@ -578,7 +594,7 @@ async def show_or_edit_weapon(e, weapon, message=None):
         msg = await client.say(embed=e)
         wep_msgs[msg.id] = weapon
         all_msgs.append(msg)
-        for emoji in config.weapon_reactions:
+        for emoji in config.wep_reactions:
             await client.add_reaction(msg, emoji)
     else:
         msg = await client.edit_message(message, embed=e)
