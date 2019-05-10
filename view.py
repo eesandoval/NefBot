@@ -242,12 +242,12 @@ async def show_wyrmprint(wyr, message=None):
     sub_portrait_URL = "wyrmprints/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
-    e.add_field(name=get_emoji_eldwater(wyr.rarity) +
-                get_emoji_rarity(wyr.rarity),
+    e.add_field(name=get_emoji_rarity(wyr.rarity),
                 value="**HP** {0}\n**STR** {1}"
                 .format(wyr.maxhp, wyr.maxstr),
                 inline=True)
-    e.add_field(name=get_emoji_limited(wyr.limited),
+    e.add_field(name=get_emoji_eldwater(wyr.rarity) +
+                get_emoji_limited(wyr.limited),
                 value="**Released**\n{0}"
                 .format(convert_ISO_date_to_string(wyr.releasedate)),
                 inline=True)
@@ -259,34 +259,33 @@ async def show_wyrmprint(wyr, message=None):
 
 
 @client.event
-async def show_dragon(dragon, message=None):
-    url_name = "%20".join(dragon.name.split())
-    e = discord.Embed(title=dragon.name, desc=dragon.name,
+async def show_dragon(dra, message=None):
+    url_name = "%20".join(dra.name.split())
+    e = discord.Embed(title=dra.name,
+                      desc=dra.name,
                       url=config.gamepedia_url.format(url_name),
-                      color=get_color(dragon.elementtype))
+                      color=get_color(dra.elementtype))
     sub_portrait_URL = "dragons/portraits/{0}.png".format(url_name)
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
-    e.add_field(name="Element", value=get_emoji_element(dragon.elementtype) +
-                get_emoji_limited(dragon.limited),
+    e.add_field(name=get_emoji_rarity(dra.rarity),
+                value="**HP** {0}\n**STR** {1}"
+                .format(dra.maxhp, dra.maxstr),
                 inline=True)
-    e.add_field(name="Rarity", value=get_emoji_rarity(dragon.rarity),
-                inline=True)
-    e.add_field(name="Max HP/Max STR",
-                value="{0}/{1}".format(dragon.maxhp, dragon.maxstr),
-                inline=True)
-    e.add_field(name="Release Date",
-                value=convert_ISO_date_to_string(dragon.releasedate),
+    e.add_field(name=get_emoji_element(dra.elementtype) +
+                get_emoji_limited(dra.limited),
+                value="**Released**\n{0}"
+                .format(convert_ISO_date_to_string(dra.releasedate)),
                 inline=True)
     skill_format = "Skill: {0}"
     ability_format = "Ability: {0}"
-    for skill in dragon.skills:
+    for skill in dra.skills:
         e.add_field(name=skill_format.format(skill.name),
                     value=skill.description, inline=False)
-    for ability in dragon.abilities:
+    for ability in dra.abilities:
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description, inline=False)
-    await show_or_edit_dragon(e, dragon, message)
+    await show_or_edit_dragon(e, dra, message)
 
 
 @client.event

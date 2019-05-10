@@ -63,7 +63,7 @@ class Adventurer:
         with Database("master.db") as db:
             result = db.query(Adventurer.id_query_text, (name,))
         if result is None or result == []:
-            return 0
+            return (0, "")
         return (int(result[0][0]), result[0][1])
 
     def __init__(self, name, level=None):
