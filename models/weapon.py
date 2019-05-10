@@ -87,7 +87,7 @@ class Weapon:
             return False
         result = result[0]
         self.weaponid = result[0]
-        self.elementtype = result[1].lower()
+        self.elementtype = result[1]
         self.weapontype = result[2].lower()
         self.rarity = result[3]
         self.maxhp = result[4]
@@ -141,9 +141,7 @@ class Weapon:
 
     weapon_query_text = '''
     SELECT D.WeaponID
-        , CASE
-        WHEN ET.Name IS NULL THEN ''
-        ELSE ET.Name END AS "ElementTypeName"
+        , lower(ET.Name) AS "ElementTypeName"
         , WT.Name AS "WeaponTypeName"
         , D.Rarity
         , D.MaxHP
@@ -220,9 +218,7 @@ class Weapon:
 
     alias_query_text = '''
     SELECT W.WeaponID
-        , CASE
-        WHEN ET.Name IS NULL THEN ''
-        ELSE ET.Name END AS "ElementTypeName"
+        , lower(ET.Name) AS "ElementTypeName"
         , WT.Name AS "WeaponTypeName"
         , W.Rarity
         , W.MaxHP

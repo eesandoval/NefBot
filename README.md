@@ -1,40 +1,81 @@
 # NefBot - A Discord Bot for Dragalia Lost
 [![Build Status](https://travis-ci.org/eesandoval/NefBot.svg?branch=master)](https://travis-ci.org/eesandoval/NefBot)
 1. [About](#about)
-2. [Installation](#installation)
-3. [Issues](#issues)
-4. [License](#license)
+2. [Features](#features)
+3. [Installation](#installation)
+4. [Issues](#issues)
+5. [License](#license)
 
 # About
 ## Summary
-A simple discord bot used to gather information from the Dragalia Lost mobile game. It is able to pull up information regarding adventurers, dragons, and wyrmprints as well as querying the database it uses to find any of the three with a combination of elements (weapon, element, abilities, etc).
+A simple discord bot used to gather information from the Dragalia Lost mobile game. It is able to pull up information from the game including adventurers, dragons, wyrmprints, and weapons. It can also query the database it uses to find any of the three with a combination of elements (weapon, element, abilities, etc).
+
+# Features
 ## Searching By Name
-<img src="https://i.imgur.com/AAhkUcC.png" width="400">
+<img src="https://i.imgur.com/nZZtcls.png" width="400">
 
 You can search for adventurers, dragons, and wyrmprints with the following command
 ```
-^(a|d|w) [name]
+^(a|d|w|wep) [name]
 ```
-Where a = adventurers, d = dragons, and w = wyrmprints. Names are not case sensitive and you can use incomplete names as well. Additionally, if multiple results would be found, the earliest one released in game will be pulled. 
+Where a = adventurers, d = dragons, w = wyrmprints, and wep = weapons. Names are not case sensitive and you can use incomplete names as well. Additionally, if multiple results would be found, the earliest one released in game will be pulled. 
 
-## Adjusting Bind Level
-### 0UB
-<img src="https://i.imgur.com/Of9H1xD.png" width="400">
+## Searching By Alias
+<img src="https://i.imgur.com/FIsel3B.png" width="400">
 
-### MUB
-<img src="https://i.imgur.com/sByB0kt.png" width="400">
+Searching for aliases allows for an easy way to search for items without remembering the full name. Out of the box the bot comes with pre-defined names (such as HElly -> Halloween Elisanne)
 
-You can now view the adventurers, dragons, or wyrmprints at different bind levels using the reactions at the bottom of the message. Ticking the sound button that is lower will show the item at 0UB, while ticking the sound button at max will show the item at MUB. For adventurers, this bind level is determined by their skills and abilities with three different reactions to view them from level 1, 2, and 3. 
+## Setting Aliases
+<img src="https://i.imgur.com/JsDwifI.png" width="400">
 
-## Full Image View
-<img src="https://i.imgur.com/90Lut8Y.png" width="400">
+In addition to searching using an alias, you can also set your own aliases. The command to do so is
+
+```
+^alias [alias_text] [alias_name]
+```
+Where the first parameter will be the text you use to search for, and the second parameter will be the object it refers to. Use quotations around text that has spaces. Repeating this command will edit the alias.
+
+You can also delete an alias using the same command but omitting the second parameter:
+```
+^alias [alias_text]
+```
+
+## Reactions as Buttons
+### Bind Levels
+<img src="https://i.imgur.com/vw0uDiB.png" width="400">
+
+Bind levels can now be adjusted using the speaker reactions. The first speaker (with no noise) will denote 0 unbinds
+
+<img src="https://i.imgur.com/GVD1jwN.png" width="400">
+
+The next speaker will denote 2 unbinds for Adventurers and Wyrmprints. For Dragons and Weapons, this is their max unbind as they only change once when unbinding currently
+
+<img src="https://i.imgur.com/2VUqozO.png" width="400">
+
+The final speaker denotes a max unbind for Adventurers and Wyrmprints. Note that when speaking of unbind levels on Adventurers, it refers to their skill and ability levels (where MUB = max skills and max abilities, 2UB = level 2 skills and max abilites, and 0UB = level 1 skills and level 1 abilities)
+
+### Full Images
+<img src="https://i.imgur.com/uVHnuFG.png" width="400">
 
 You can also view the full image of these characters and items using the portrait reaction button. 
 
-## Querying
-<img src="https://i.imgur.com/1rs8lfC.png" width="400">
+<img src="https://i.imgur.com/dTdCdGn.png" width="400">
 
-There exists additionally a query function to find adventurers, dragons, or wyrmprints with specific skills, abilities, rarities, element, weapon, etc.
+Wyrmprints include an additional reaction to view the refined version as well.
+
+### Upgrade Paths
+<img src="https://i.imgur.com/CETElXn.png" width="400">
+
+When pulling up weapons, using the fast foward reaction button you can view the upgrade path this weapon can take, as well as the materials needed. 
+
+<img src="https://i.imgur.com/It9KUj3.png" width="400">
+
+Additionally, as seen above, there exists a rewind reaction to view where this weapon comes from and the materials needed.
+
+## Querying
+<img src="https://i.imgur.com/pVo9G9N.png" width="400">
+
+You can use a query function to find adventurers, dragons, or wyrmprints with specific skills, abilities, rarities, element, weapon, etc.
 ```
 ^query type=(a|w|d) key=value
 ```
