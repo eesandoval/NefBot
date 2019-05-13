@@ -29,6 +29,7 @@ from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
 from models.weapon import Weapon
+from models.events import Event
 from utils.config import Config
 from utils.parsing import convert_ISO_date_to_string, convert_args_to_dict
 
@@ -175,6 +176,18 @@ async def alias(alias_text, aliased_name=None):
         await show_exception(e)
 
 
+@client.command(name="events",
+                description='''
+                Shows the latest events that are happening in the game
+                This includes the current showcase(s), void battles,
+                raid/facility/defense events, and limited endeavors
+                ''',
+                brief="Shows the latest events currently happening")
+async def events():
+    current_events = controller.handle_current_events()
+    await show_events(current_events)
+
+
 def handle_context(context):
     global channel
     channel = context.message.channel
@@ -318,6 +331,20 @@ async def show_weapon(wep, message=None):
                     value=ability.description,
                     inline=False)
     await show_or_edit_weapon(e, wep, message)
+
+
+@client.event
+async def show_events(current_events, message=None):
+    e = discord.Embed(title="Current Events", desc="Current Events",
+                      color=get_color(None))
+    for event in current_events:
+        e.add_field(name="{0} [{1}]".format(event.name, event.type),
+                    value="*{0}* - *{1}* ({2} days and {3} hours left)".format(
+                        convert_ISO_date_to_string(event.start),
+                        convert_ISO_date_to_string(event.end),
+                        event.days, event.hours),
+                    inline=False)
+    await client.say(embed=e)
 
 
 @client.event
@@ -595,6 +622,19 @@ async def show_or_edit_weapon(e, weapon, message=None):
         all_msgs.append(msg)
         for emoji in config.wep_reactions:
             await client.add_reaction(msg, emoji)
+    else:
+        msg = await client.edit_message(message, embed=e)
+
+
+@client.event
+async def show_or_edit_event(e, message=None):
+    if message is None:
+        global all_msgs
+        await clear_active_messages()
+        msg = await client.say(embed=e)
+        all_msgs.append(msg)
+        # for emoji in config.wep_reactions:
+        #     await client.add_reaction(msg, emoji)
     else:
         msg = await client.edit_message(message, embed=e)
 

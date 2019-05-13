@@ -43,3 +43,7 @@ def test_weapons():
                 assert result_wep.rarity == rarity
                 assert result_wep.elementtype == element
                 assert result_wep.weapontype == weapon
+
+
+def test_events():
+    assert len(handle_current_events()) >= 1

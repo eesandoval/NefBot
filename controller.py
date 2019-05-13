@@ -28,6 +28,7 @@ from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
 from models.weapon import Weapon
 from models.alias import create_update_alias, delete_alias
+from models.events import Event
 
 async def query(criteria):
     try:
@@ -188,6 +189,10 @@ def handle_alias(alias_text, aliased_name):
     if id_name[0] == 0:
         raise KeyError("Could not find {0}".format(aliased_name))
     return create_update_alias(id_name[0], alias_text, alias_type, id_name[1])
+
+
+def handle_current_events():
+    return Event.get_current_events()
 
 
 def start():
