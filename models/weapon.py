@@ -28,14 +28,17 @@ from models.ability import Ability
 
 class Weapon:
     @staticmethod
-    def find_weapons(element=None, skill=None, ability=None, rarity=None,
-                     level=2):
+    def find_weapons(element=None, weapon=None, skill=None, ability=None,
+                     rarity=None):
         weapons = []
         params = ()
         full_query = Weapon.weapon_search_query_text
         if element is not None:
             full_query += "AND ET.name = ? COLLATE NOCASE "
             params += (element,)
+        if weapon is not None:
+            full_query += "AND WT.name = ? COLLATE NOCASE "
+            params += (weapon,)
         if skill is not None:
             full_query += "AND S.name LIKE '%' || ? || '%' COLLATE NOCASE "
             params += (skill,)
@@ -45,9 +48,6 @@ class Weapon:
         if rarity is not None:
             full_query += "AND W.rarity >= ? "
             params += (rarity,)
-        if level is not None:
-            full_query += "AND W.level = ? "
-            params += (level,)
         if len(params) == 0:
             return weapons
         with Database("master.db") as db:
@@ -55,7 +55,7 @@ class Weapon:
         if result is None:
             return weapons
         for weapon in result:
-            weapons.append(Weapon(weapon[0], level))
+            weapons.append(Weapon(weapon[0], 2))
         return weapons
 
     @staticmethod
@@ -208,11 +208,12 @@ class Weapon:
     weapon_search_query_text = '''
     SELECT DISTINCT W.Name
     FROM Weapons W
-        INNER JOIN ElementTypes ET ON ET.ElementTypeID = W.ElementTypeID
-        INNER JOIN WeaponSkills DS ON DS.WeaponID = W.WeaponID
-        INNER JOIN Skills S ON S.SkillID = DS.SkillID
-        INNER JOIN WeaponAbilities DA ON DA.WeaponID = W.WeaponID
-        INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
+        INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = W.WeaponTypeID
+        LEFT JOIN ElementTypes ET ON ET.ElementTypeID = W.ElementTypeID
+        LEFT JOIN WeaponSkills DS ON DS.WeaponID = W.WeaponID
+        LEFT JOIN Skills S ON S.SkillID = DS.SkillID
+        LEFT JOIN WeaponAbilities DA ON DA.WeaponID = W.WeaponID
+        LEFT JOIN Abilities A ON A.AbilityID = DA.AbilityID
     WHERE 1=1
     '''
 

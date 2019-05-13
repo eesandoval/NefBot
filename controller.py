@@ -66,9 +66,7 @@ async def query(criteria):
             await view.show_unknown_criteria("type", criteria["type"])
 
     except Exception as e:
-        await view.show_exception(
-            "Failed to process query with the following error:{0}"
-            .format(str(e)), traceback.format_exc())
+        await view.show_exception(e)
 
 
 def query_adventurers(criteria):
