@@ -155,6 +155,7 @@ async def query(context):
 async def update():
     global config
     config = Config("config.ini")
+    controller.handle_update(config.picture_server)
     await client.say("Update completed")
 
 

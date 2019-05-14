@@ -23,12 +23,14 @@ SOFTWARE.
 '''
 import traceback
 import view
+import urllib.request
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
 from models.weapon import Weapon
 from models.alias import create_update_alias, delete_alias
 from models.events import Event
+from models.database import Database
 
 async def query(criteria):
     try:
@@ -193,6 +195,11 @@ def handle_alias(alias_text, aliased_name):
 
 def handle_current_events():
     return Event.get_current_events()
+
+
+def handle_update(remote_url):
+    url = remote_url + "database/master.db"
+    urllib.request.urlretrieve(url, "master.db")
 
 
 def start():
