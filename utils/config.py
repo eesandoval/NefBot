@@ -44,7 +44,9 @@ class Config:
                              for k, v in config.items("RarityEmojis")}
         self.picture_server = config["Other"]["PictureServer"]
         self._set_reactions()
-        self.authorized_ids = config["Discord"]["AuthorizedIds"].split(',')
+        self.authorized_ids = [int(x)
+                               for x in config["Discord"]["AuthorizedIds"]
+                               .split(',')]
         self.streaming = config.getboolean("Discord", "Streaming")
         self.message_limit = config.getint("Discord", "MessageLimit")
         self.limited_emoji = config["OtherEmojis"]["Limited"]

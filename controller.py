@@ -21,8 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-import traceback
-import view
 import urllib.request
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
@@ -31,45 +29,31 @@ from models.weapon import Weapon
 from models.alias import create_update_alias, delete_alias
 from models.events import Event
 from models.database import Database
+from view import start_discord_bot
 
-async def query(criteria):
-    try:
-        if "type" not in criteria:
-            await view.show_missing_criteria("type")
 
-        if criteria["type"].startswith("a"):
-            adventurers = query_adventurers(criteria)
-            if adventurers is None or adventurers == []:
-                await view.show_no_results_found()
-            for adventurer in adventurers:
-                await view.show_adventurer(adventurer)
+def query(criteria):
+    unit_list = []
 
-        elif criteria["type"].startswith("wy"):
-            wyrmprints = query_wyrmprints(criteria)
-            if wyrmprints is None or wyrmprints == []:
-                await view.show_no_results_found()
-            for wyrmprint in wyrmprints:
-                await view.show_wyrmprint(wyrmprint)
+    adventurers = query_adventurers(criteria)
+    for adventurer in adventurers or []:
+        unit_list.append((adventurer.name, "Adventurer"))
 
-        elif criteria["type"].startswith("d"):
-            dragons = query_dragons(criteria)
-            if dragons is None or dragons == []:
-                await view.show_no_results_found()
-            for dragon in dragons:
-                await view.show_dragon(dragon)
+    wyrmprints = query_wyrmprints(criteria)
+    for wyrmprint in wyrmprints or []:
+        unit_list.append((wyrmprint.name, "Wyrmprint"))
 
-        elif criteria["type"].startswith("we"):
-            weapons = query_weapons(criteria)
-            if weapons is None or weapons == []:
-                await view.show_no_results_found()
-            for weapon in weapons:
-                await view.show_weapon(weapon)
+    dragons = query_dragons(criteria)
+    for dragon in dragons or []:
+        unit_list.append((dragon.name, "Dragon"))
 
-        else:
-            await view.show_unknown_criteria("type", criteria["type"])
+    weapons = query_weapons(criteria)
+    for weapon in weapons or []:
+        unit_list.append((weapon.name, "Weapon"))
 
-    except Exception as e:
-        await view.show_exception(e)
+    if unit_list == []:
+        raise KeyError("No results found")
+    return unit_list
 
 
 def query_adventurers(criteria):
@@ -203,4 +187,4 @@ def handle_update(remote_url):
 
 
 def start():
-    view.start_discord_bot()
+    start_discord_bot()

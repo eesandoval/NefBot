@@ -24,6 +24,7 @@ SOFTWARE.
 import controller
 import discord
 import traceback
+import asyncio
 from discord.ext.commands import Bot
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
@@ -33,13 +34,11 @@ from models.events import Event
 from utils.config import Config
 from utils.parsing import convert_ISO_date_to_string, convert_args_to_dict
 
-channel = None
-adv_msgs = {}
-wyr_msgs = {}
-dra_msgs = {}
-wep_msgs = {}
-all_msgs = []
 config = Config("config.ini")
+channel = None
+active_messages = {}
+emoji_reactions = {"adv": config.adv_reactions, "wyr": config.wyr_reactions,
+                   "dra": config.dra_reactions, "wep": config.wep_reactions}
 client = Bot(command_prefix=config.command_start)
 
 
@@ -47,18 +46,72 @@ def start_discord_bot():
     client.run(config.token)
 
 
+# region Reaction Processing
+
+
+def process_adventurers_reaction(emoji, adv):
+    if emoji == "\U0001F5BC":  # Full picture
+        return create_dynamic_portrait_embed(adv, "adventurers/full")
+    adv = controller.process_adventurer(adv.name, get_level(emoji))
+    return create_adventurer_embed(adv)
+
+
+def process_wyrmprint_reaction(emoji, wyr):
+    if emoji == "\U0001F5BC":  # Full picture
+        return create_dynamic_portrait_embed(wyr, "wyrmprints/full")
+    elif emoji == "\U0001F3A8":  # Full base picture
+        return create_dynamic_portrait_embed(wyr, "wyrmprints/base")
+    wyr = controller.process_wyrmprint(wyr.name, get_level(emoji))
+    return create_wyrmprint_embed(wyr)
+
+
+def process_dragon_reaction(emoji, dra):
+    if emoji == "\U0001F5BC":  # Full picture
+        return create_dynamic_portrait_embed(dra, "dragons/full")
+    dra = controller.process_dragon(dra.name, get_level(emoji))
+    return create_dragon_embed(dra)
+
+
+def process_weapon_reaction(emoji, wep):
+    if emoji == "\U000023E9":  # Upgrades To
+        return create_weapon_upgrades_to_embed(wep)
+    elif emoji == "\U000023EA":  # Upgrades From
+        return create_weapon_upgrades_from_embed(wep)
+    wep = controller.process_weapon(wep.name, get_level(emoji))
+    return create_weapon_embed(wep)
+
+
+def get_level(emoji):
+    levels = {"\U0001F508": 1, "\U0001F509": 2, "\U0001F50A": 3}
+    if emoji not in levels:
+        return 1
+    return levels[emoji]
+
+
+reaction_functions = {"adv": process_adventurers_reaction,
+                      "wyr": process_wyrmprint_reaction,
+                      "dra": process_dragon_reaction,
+                      "wep": process_weapon_reaction}
+# endregion
+
+
+# region Discord Commands
+
+
 @client.command(name="exit",
                 description="Shuts down the bot",
                 brief="Shuts down the bot (authorized users only)",
-                aliases=["shutdown", "quit", "close"],
-                pass_context=True)
-async def exit(context):
+                aliases=["shutdown", "quit", "close"])
+async def exit(ctx):
+    ctx.typing()
     if (config.authorized_ids == [] or
-            context.message.author.id in config.authorized_ids):
-        await client.say("Shutting down")
+            ctx.message.author.id in config.authorized_ids):
+        await ctx.send("Shutting down")
+        for _, msg in active_messages.items():
+            await msg.clear_reactions()
         await client.close()
     else:
-        await client.say("User is not authorized to exit this bot")
+        await ctx.send("User is not authorized to exit this bot")
 
 
 @client.command(name="get_adventurer",
@@ -68,14 +121,14 @@ async def exit(context):
                 results, the earliest released adventurer is returned.
                 ''',
                 brief="Gets an adventurer using a case insensitive search",
-                aliases=["adventurer", "adv", "a"],
-                pass_context=True)
+                aliases=["adventurer", "adv", "a"])
 async def get_adventurer(ctx, *, name):
     try:
         adventurer = controller.process_adventurer(name)
-        await show_adventurer(adventurer)
+        embed = create_adventurer_embed(adventurer)
+        await display_embed(embed, "adv", adventurer, ctx)
     except Exception as e:
-        await show_exception(e)
+        await show_exception(ctx, e)
 
 
 @client.command(name="get_wyrmprint",
@@ -85,14 +138,14 @@ async def get_adventurer(ctx, *, name):
                 results, the earliest released wyrmprint is returned.
                 ''',
                 brief="Gets a wyrmprint using a case insensitive search",
-                aliases=["wyrmprint", "wyr", "w"],
-                pass_context=True)
+                aliases=["wyrmprint", "wyr", "w"])
 async def get_wyrmprint(ctx, *, name):
     try:
         wyrmprint = controller.process_wyrmprint(name)
-        await show_wyrmprint(wyrmprint)
+        embed = create_wyrmprint_embed(wyrmprint)
+        await display_embed(embed, "wyr", wyrmprint, ctx)
     except Exception as e:
-        await show_exception(e)
+        await show_exception(ctx, e)
 
 
 @client.command(name="get_dragon",
@@ -102,14 +155,14 @@ async def get_wyrmprint(ctx, *, name):
                 results, the earliest released dragon is returned.
                 ''',
                 brief="Gets a dragon using a case insensitive search",
-                aliases=["dragon", "dra", "d"],
-                pass_context=True)
+                aliases=["dragon", "dra", "d"])
 async def get_dragon(ctx, *, name):
     try:
         dragon = controller.process_dragon(name)
-        await show_dragon(dragon)
+        embed = create_dragon_embed(dragon)
+        await display_embed(embed, "dra", dragon, ctx)
     except Exception as e:
-        await show_exception(e)
+        await show_exception(ctx, e)
 
 
 @client.command(name="get_weapon",
@@ -119,14 +172,14 @@ async def get_dragon(ctx, *, name):
                 results, the earliest released weapon is returned.
                 ''',
                 brief="Gets a weapon using a case insensitive search",
-                aliases=["weapon", "wep"],
-                pass_context=True)
+                aliases=["weapon", "wep"])
 async def get_weapon(ctx, *, name):
     try:
         weapon = controller.process_weapon(name)
-        await show_weapon(weapon)
+        embed = create_weapon_embed(weapon)
+        await display_embed(embed, "wep", weapon, ctx)
     except Exception as e:
-        await show_exception(e)
+        await show_exception(ctx, e)
 
 
 @client.command(name="query",
@@ -137,12 +190,14 @@ async def get_weapon(ctx, *, name):
                 {0}query type=adv ability="Burn Res +100%"
                 '''.format(config.command_start),
                 brief="Queries for any adventurer, print, or dragon",
-                aliases=["que", "q"],
-                pass_context=True)
-async def query(context):
-    message = handle_context(context)
-    await client.send_typing(channel)
-    await controller.query(convert_args_to_dict(message))
+                aliases=["que", "q"])
+async def query(ctx, *, criteria):
+    try:
+        unit_list = controller.query(convert_args_to_dict(criteria))
+        embed = create_unit_list_embed(unit_list)
+        await ctx.send(embed=embed)
+    except Exception as e:
+        await show_exception(ctx, e)
 
 
 @client.command(name="update",
@@ -152,11 +207,11 @@ async def query(context):
                 ''',
                 brief="Updates the bot's configurations",
                 aliases=["u"])
-async def update():
+async def update(ctx):
     global config
     config = Config("config.ini")
     controller.handle_update(config.picture_server)
-    await client.say("Update completed")
+    await ctx.send("Update completed")
 
 
 @client.command(name="alias",
@@ -169,12 +224,12 @@ async def update():
                 may exist that refers to an adventurer, dragon, and print.
                 ''',
                 brief="Creates a new alias to search by")
-async def alias(alias_text, aliased_name=None):
+async def alias(ctx, alias_text, aliased_name=None):
     try:
         alias_result = controller.handle_alias(alias_text, aliased_name)
-        await client.say(alias_result)
+        await ctx.send(alias_result)
     except Exception as e:
-        await show_exception(e)
+        await show_exception(ctx, e)
 
 
 @client.command(name="events",
@@ -184,35 +239,68 @@ async def alias(alias_text, aliased_name=None):
                 raid/facility/defense events, and limited endeavors
                 ''',
                 brief="Shows the latest events currently happening")
-async def events():
+async def events(ctx):
     current_events = controller.handle_current_events()
-    await show_events(current_events)
+    embed = create_events_embed(current_events)
+    await ctx.send(embed=embed)
+# endregion
 
 
-def handle_context(context):
-    global channel
-    channel = context.message.channel
-    received_message = context.message.content.split()
-    message_content = ""
-    if len(received_message) > 1:
-        message_content = (' '.join(received_message[1:])).strip()
-    return message_content
-
-
+# region Client Events
 @client.event
 async def on_ready():
+    activity = discord.Game(name=config.current_event)
     if config.streaming:
-        await client.change_presence(
-            game=discord.Game(
-                name=config.current_event, url=config.stream_URL, type=1))
-    else:
-        await client.change_presence(
-            game=discord.Game(
-                name=config.current_event))
+        activity = discord.Streaming(name=config.current_event,
+                                     url=config.stream_URL)
+    await client.change_presence(activity=activity)
 
 
 @client.event
-async def show_adventurer(adv, message=None):
+async def display_embed(embed, embed_type, dynamic, ctx=None, message=None):
+    reaction_list = emoji_reactions[embed_type]
+
+    def check(reaction, user):
+        return user != client.user and reaction.message.id == message.id
+
+    if message is None:
+        message = await ctx.send(embed=embed)
+        active_messages[message.id] = message
+        for emoji in reaction_list:
+            await message.add_reaction(emoji)
+    else:
+        await message.edit(embed=embed)
+    try:
+        reaction, user = await client.wait_for("reaction_add", timeout=60.0,
+                                               check=check)
+        await message.remove_reaction(reaction, user)
+        embed = reaction_functions[embed_type](reaction.emoji, dynamic)
+        await display_embed(embed, embed_type, dynamic, ctx, message)
+    except asyncio.TimeoutError:
+        await message.clear_reactions()
+        del active_messages[message.id]
+
+
+@client.event
+async def show_exception(ctx, e):
+    print(traceback.format_exc())
+    await ctx.send(str(e))
+# endregion
+
+
+# region Embed Functions
+
+
+def create_dynamic_portrait_embed(dynamic, url):
+    url_name = "%20".join(dynamic.name.split())
+    e = discord.Embed(title=dynamic.name, desc=dynamic.name,
+                      url=config.gamepedia_url.format(url_name))
+    sub_URL = "{0}/{1}.png".format(url, url_name)
+    e.set_image(url=config.picture_server + sub_URL)
+    return e
+
+
+def create_adventurer_embed(adv):
     url_name = "%20".join(adv.name.split())
     e = discord.Embed(title=adv.name + " - " + adv.title,
                       desc=adv.title,
@@ -243,11 +331,10 @@ async def show_adventurer(adv, message=None):
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description,
                     inline=False)
-    await show_or_edit_adventurer(e, adv, message)
+    return e
 
 
-@client.event
-async def show_wyrmprint(wyr, message=None):
+def create_wyrmprint_embed(wyr):
     url_name = "%20".join(wyr.name.split())
     e = discord.Embed(title=wyr.name,
                       desc=wyr.name,
@@ -269,11 +356,10 @@ async def show_wyrmprint(wyr, message=None):
     for ability in wyr.abilities:
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description, inline=False)
-    await show_or_edit_wyrmprint(e, wyr, message)
+    return e
 
 
-@client.event
-async def show_dragon(dra, message=None):
+def create_dragon_embed(dra):
     url_name = "%20".join(dra.name.split())
     e = discord.Embed(title=dra.name,
                       desc=dra.name,
@@ -299,11 +385,10 @@ async def show_dragon(dra, message=None):
     for ability in dra.abilities:
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description, inline=False)
-    await show_or_edit_dragon(e, dra, message)
+    return e
 
 
-@client.event
-async def show_weapon(wep, message=None):
+def create_weapon_embed(wep):
     url_name = "%20".join(wep.name.split())
     e = discord.Embed(title=wep.name,
                       desc=wep.name,
@@ -331,11 +416,47 @@ async def show_weapon(wep, message=None):
         e.add_field(name=ability_format.format(ability.name),
                     value=ability.description,
                     inline=False)
-    await show_or_edit_weapon(e, wep, message)
+    return e
 
 
-@client.event
-async def show_events(current_events, message=None):
+def create_weapon_upgrades_to_embed(wep):
+    url_name = "%20".join(wep.name.split())
+    e = discord.Embed(title="{0} - Upgrades To".format(wep.name),
+                      desc="Upgrades To",
+                      url=config.gamepedia_url.format(url_name))
+    for i in range(0, len(wep.upgrades_to)):
+        materials_str = ""
+        upgrade_to = wep.upgrades_to[i]
+        for mat, qty in wep.upgrades_to_materials[i].items():
+            materials_str += "{0} - *{1}*\n".format(mat, str(qty))
+        e.add_field(name=upgrade_to, value=materials_str, inline=False)
+    return e
+
+
+def create_weapon_upgrades_from_embed(wep):
+    url_name = "%20".join(wep.name.split())
+    e = discord.Embed(title="{0} - Upgrades From".format(wep.name),
+                      desc="Upgrades From",
+                      url=config.gamepedia_url.format(url_name))
+    for i in range(0, len(wep.upgrades_from)):
+        materials_str = ""
+        upgrade_from = wep.upgrades_from[i]
+        for mat, qty in wep.upgrades_from_materials[i].items():
+            materials_str += "{0} - *{1}*\n".format(mat, str(qty))
+    for upgrade_from in wep.upgrades_from:
+        e.add_field(name=upgrade_from, value=materials_str, inline=False)
+    return e
+
+
+def create_unit_list_embed(unit_list):
+    e = discord.Embed(title="Query Results", desc="Query Results",
+                      color=get_color(None))
+    for name, unit_type in unit_list:
+        e.add_field(name=name, value="*{0}*".format(unit_type), inline=False)
+    return e
+
+
+def create_events_embed(current_events):
     e = discord.Embed(title="Current Events", desc="Current Events",
                       color=get_color(None))
     for event in current_events:
@@ -345,32 +466,11 @@ async def show_events(current_events, message=None):
                         convert_ISO_date_to_string(event.end),
                         event.days, event.hours),
                     inline=False)
-    await client.say(embed=e)
+    return e
+# endregion
 
 
-@client.event
-async def show_missing_criteria(missing_criteria):
-    await client.send_message(channel,
-                              "Missing criteria {0}".format(missing_criteria))
-
-
-@client.event
-async def show_no_results_found():
-    await client.send_message(channel,
-                              "No results found for the given criteria")
-
-
-@client.event
-async def show_unknown_criteria(criteria_name, criteria):
-    await client.send_message(channel,
-                              "Unknown criteria: name '{0}', value '{1}'"
-                              .format(criteria_name, criteria))
-
-
-@client.event
-async def show_exception(e):
-    print(traceback.format_exc())
-    await client.say(str(e))
+# region Helper Functions
 
 
 def get_emoji_element(elementtype):
@@ -411,249 +511,4 @@ def get_emoji_eldwater(rarity):
     elif rarity == 5:
         cost = 37000
     return "{0} x{1}".format(config.eldwater_emoji, str(cost))
-
-
-@client.event
-async def on_reaction_add(reaction, user):
-    if user == client.user:
-        return
-
-    emoji = reaction.emoji
-    message = reaction.message
-    if (message.id in adv_msgs and emoji in config.adv_reactions):
-        await client.remove_reaction(reaction.message, reaction.emoji, user)
-        adventurer = adv_msgs[message.id]
-        await process_adventurers_reaction(emoji, adventurer, message)
-
-    elif (message.id in wyr_msgs and emoji in config.wyr_reactions):
-        await client.remove_reaction(reaction.message, reaction.emoji, user)
-        wyrmprint = wyr_msgs[message.id]
-        await process_wyrmprint_reaction(emoji, wyrmprint, message)
-
-    elif (message.id in dra_msgs and emoji in config.dra_reactions):
-        await client.remove_reaction(reaction.message, reaction.emoji, user)
-        dragon = dra_msgs[message.id]
-        await process_dragon_reaction(emoji, dragon, message)
-
-    elif (message.id in wep_msgs and emoji in config.wep_reactions):
-        await client.remove_reaction(reaction.message, reaction.emoji, user)
-        weapon = wep_msgs[message.id]
-        await process_weapon_reaction(emoji, weapon, message)
-
-
-@client.event
-async def process_adventurers_reaction(emoji, adventurer, message):
-    if emoji == "\U0001F5BC":  # Full picture
-        await show_adventurer_full(adventurer, message)
-        return
-
-    adventurer = controller.process_adventurer(adventurer.name,
-                                               get_level(emoji))
-    await show_adventurer(adventurer, message)
-
-
-@client.event
-async def process_wyrmprint_reaction(emoji, wyrmprint, message):
-    if emoji == "\U0001F5BC":  # Full picture
-        await show_wyrmprint_full(wyrmprint, message)
-        return
-    elif emoji == "\U0001F3A8":  # Full base picture
-        await show_wyrmprint_base_full(wyrmprint, message)
-        return
-
-    wyrmprint = controller.process_wyrmprint(wyrmprint.name, get_level(emoji))
-    await show_wyrmprint(wyrmprint, message)
-
-
-@client.event
-async def process_dragon_reaction(emoji, dragon, message):
-    if emoji == "\U0001F5BC":  # Full picture
-        await show_dragon_full(dragon, message)
-        return
-
-    dragon = controller.process_dragon(dragon.name, get_level(emoji))
-    await show_dragon(dragon, message)
-
-
-@client.event
-async def process_weapon_reaction(emoji, weapon, message):
-    if emoji == "\U000023E9":  # Upgrades To
-        await show_weapon_upgrades_to(weapon, message)
-        return
-    elif emoji == "\U000023EA":  # Upgrades From
-        await show_weapon_upgrades_from(weapon, message)
-        return
-
-    weapon = controller.process_weapon(weapon.name, get_level(emoji))
-    await show_weapon(weapon, message)
-
-
-def get_level(emoji):
-    level = 1
-    if emoji == "\U0001F508":  # 1 unbind
-        level = 1
-    elif emoji == "\U0001F509":  # 2 unbinds
-        level = 2
-    elif emoji == "\U0001F50A":  # 3 unbinds
-        level = 3
-    return level
-
-
-@client.event
-async def show_adventurer_full(adventurer, message=None):
-    url_name = "%20".join(adventurer.name.split())
-    e = discord.Embed(title=adventurer.name + " - " + adventurer.title,
-                      desc=adventurer.title,
-                      url=config.gamepedia_url.format(url_name))
-    sub_URL = "adventurers/full/{0}.png".format(url_name)
-    e.set_image(url=config.picture_server + sub_URL)
-    await show_or_edit_adventurer(e, adventurer, message)
-
-
-@client.event
-async def show_wyrmprint_full(wyrmprint, message=None):
-    url_name = "%20".join(wyrmprint.name.split())
-    e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name,
-                      url=config.gamepedia_url.format(url_name))
-    sub_URL = "wyrmprints/full/{0}.png".format(url_name)
-    e.set_image(url=config.picture_server + sub_URL)
-    await show_or_edit_wyrmprint(e, wyrmprint, message)
-
-
-@client.event
-async def show_wyrmprint_base_full(wyrmprint, message=None):
-    url_name = "%20".join(wyrmprint.name.split())
-    e = discord.Embed(title=wyrmprint.name, desc=wyrmprint.name,
-                      url=config.gamepedia_url.format(url_name))
-    sub_URL = "wyrmprints/base/{0}.png".format(url_name)
-    e.set_image(url=config.picture_server + sub_URL)
-    await show_or_edit_wyrmprint(e, wyrmprint, message)
-
-
-@client.event
-async def show_dragon_full(dragon, message=None):
-    url_name = "%20".join(dragon.name.split())
-    e = discord.Embed(title=dragon.name, desc=dragon.name,
-                      url=config.gamepedia_url.format(url_name))
-    sub_URL = "dragons/full/{0}.png".format(url_name)
-    e.set_image(url=config.picture_server + sub_URL)
-    await show_or_edit_dragon(e, dragon, message)
-
-
-@client.event
-async def show_weapon_upgrades_to(weapon, message=None):
-    url_name = "%20".join(weapon.name.split())
-    e = discord.Embed(title="{0} - Upgrades To".format(weapon.name),
-                      desc="Upgrades To",
-                      url=config.gamepedia_url.format(url_name))
-    for i in range(0, len(weapon.upgrades_to)):
-        materials_str = ""
-        upgrade_to = weapon.upgrades_to[i]
-        for mat, qty in weapon.upgrades_to_materials[i].items():
-            materials_str += "{0} - *{1}*\n".format(mat, str(qty))
-        e.add_field(name=upgrade_to, value=materials_str, inline=False)
-    await show_or_edit_weapon(e, weapon, message)
-
-
-@client.event
-async def show_weapon_upgrades_from(weapon, message=None):
-    url_name = "%20".join(weapon.name.split())
-    e = discord.Embed(title="{0} - Upgrades From".format(weapon.name),
-                      desc="Upgrades From",
-                      url=config.gamepedia_url.format(url_name))
-    for i in range(0, len(weapon.upgrades_from)):
-        materials_str = ""
-        upgrade_from = weapon.upgrades_from[i]
-        for mat, qty in weapon.upgrades_from_materials[i].items():
-            materials_str += "{0} - *{1}*\n".format(mat, str(qty))
-    for upgrade_from in weapon.upgrades_from:
-        e.add_field(name=upgrade_from, value=materials_str, inline=False)
-    await show_or_edit_weapon(e, weapon, message)
-
-
-@client.event
-async def show_or_edit_adventurer(e, adventurer, message=None):
-    if message is None:
-        global adv_msgs, all_msgs
-        await clear_active_messages()
-        msg = await client.say(embed=e)
-        adv_msgs[msg.id] = adventurer
-        all_msgs.append(msg)
-        for emoji in config.adv_reactions:
-            await client.add_reaction(msg, emoji)
-    else:
-        msg = await client.edit_message(message, embed=e)
-
-
-@client.event
-async def show_or_edit_wyrmprint(e, wyrmprint, message=None):
-    if message is None:
-        global wyr_msgs, all_msgs
-        await clear_active_messages()
-        msg = await client.say(embed=e)
-        wyr_msgs[msg.id] = wyrmprint
-        all_msgs.append(msg)
-        for emoji in config.wyr_reactions:
-            await client.add_reaction(msg, emoji)
-    else:
-        msg = await client.edit_message(message, embed=e)
-
-
-@client.event
-async def show_or_edit_dragon(e, dragon, message=None):
-    if message is None:
-        global dra_msgs
-        await clear_active_messages()
-        msg = await client.say(embed=e)
-        dra_msgs[msg.id] = dragon
-        all_msgs.append(msg)
-        for emoji in config.dra_reactions:
-            await client.add_reaction(msg, emoji)
-    else:
-        msg = await client.edit_message(message, embed=e)
-
-
-@client.event
-async def show_or_edit_weapon(e, weapon, message=None):
-    if message is None:
-        global adv_msgs, all_msgs
-        await clear_active_messages()
-        msg = await client.say(embed=e)
-        wep_msgs[msg.id] = weapon
-        all_msgs.append(msg)
-        for emoji in config.wep_reactions:
-            await client.add_reaction(msg, emoji)
-    else:
-        msg = await client.edit_message(message, embed=e)
-
-
-@client.event
-async def show_or_edit_event(e, message=None):
-    if message is None:
-        global all_msgs
-        await clear_active_messages()
-        msg = await client.say(embed=e)
-        all_msgs.append(msg)
-        # for emoji in config.wep_reactions:
-        #     await client.add_reaction(msg, emoji)
-    else:
-        msg = await client.edit_message(message, embed=e)
-
-
-@client.event
-async def clear_active_messages():
-    global all_msgs, adv_msgs, \
-        dra_msgs, wyr_msgs, wep_msgs
-
-    while len(all_msgs) > max(0, config.message_limit - 1):
-        message = all_msgs.pop(0)
-        await client.clear_reactions(message)
-
-        if message.id in adv_msgs:
-            adv_msgs.pop(message.id)
-        elif message.id in dra_msgs:
-            dra_msgs.pop(message.id)
-        elif message.id in wyr_msgs:
-            wyr_msgs.pop(message.id)
-        elif message.id in wep_msgs:
-            wep_msgs.pop(message.id)
+# endregion
