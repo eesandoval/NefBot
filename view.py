@@ -123,6 +123,11 @@ async def exit(ctx):
                 brief="Gets an adventurer using a case insensitive search",
                 aliases=["adventurer", "adv", "a"])
 async def get_adventurer(ctx, *, name):
+    await _get_adventurer(ctx, name)
+
+
+@client.event
+async def _get_adventurer(ctx, name):
     try:
         adventurer = controller.process_adventurer(name)
         embed = create_adventurer_embed(adventurer)
@@ -140,6 +145,11 @@ async def get_adventurer(ctx, *, name):
                 brief="Gets a wyrmprint using a case insensitive search",
                 aliases=["wyrmprint", "wyr", "w"])
 async def get_wyrmprint(ctx, *, name):
+    await _get_wyrmprint(ctx, name)
+
+
+@client.event
+async def _get_wyrmprint(ctx, name):
     try:
         wyrmprint = controller.process_wyrmprint(name)
         embed = create_wyrmprint_embed(wyrmprint)
@@ -157,6 +167,11 @@ async def get_wyrmprint(ctx, *, name):
                 brief="Gets a dragon using a case insensitive search",
                 aliases=["dragon", "dra", "d"])
 async def get_dragon(ctx, *, name):
+    await _get_dragon(ctx, name)
+
+
+@client.event
+async def _get_dragon(ctx, name):
     try:
         dragon = controller.process_dragon(name)
         embed = create_dragon_embed(dragon)
@@ -174,6 +189,11 @@ async def get_dragon(ctx, *, name):
                 brief="Gets a weapon using a case insensitive search",
                 aliases=["weapon", "wep"])
 async def get_weapon(ctx, *, name):
+    await _get_weapon(ctx, name)
+
+
+@client.event
+async def _get_weapon(ctx, name):
     try:
         weapon = controller.process_weapon(name)
         embed = create_weapon_embed(weapon)
@@ -192,12 +212,28 @@ async def get_weapon(ctx, *, name):
                 brief="Queries for any adventurer, print, or dragon",
                 aliases=["que", "q"])
 async def query(ctx, *, criteria):
+    values = []
+    channel = ctx.channel
+    get_commands = {"Adventurer": _get_adventurer, "Dragon": _get_dragon,
+                    "Wyrmprint": _get_wyrmprint, "Weapon": _get_weapon}
+
+    def check(m):
+        return (m.channel == channel and m.content.isdigit() and
+                int(m.content) in values)
     try:
         unit_list = controller.query(convert_args_to_dict(criteria))
+        values = [i for i in range(1, len(unit_list) + 1)]
         embed = create_unit_list_embed(unit_list)
         await ctx.send(embed=embed)
     except Exception as e:
         await show_exception(ctx, e)
+    try:
+        message = await client.wait_for("message", check=check, timeout=60.0)
+        unit_type = unit_list[int(message.content) - 1][1]
+        unit_name = unit_list[int(message.content) - 1][0]
+        await get_commands[unit_type](ctx, unit_name)
+    except asyncio.TimeoutError:
+        pass
 
 
 @client.command(name="update",
@@ -289,8 +325,6 @@ async def show_exception(ctx, e):
 
 
 # region Embed Functions
-
-
 def create_dynamic_portrait_embed(dynamic, url):
     url_name = "%20".join(dynamic.name.split())
     e = discord.Embed(title=dynamic.name, desc=dynamic.name,
@@ -451,8 +485,11 @@ def create_weapon_upgrades_from_embed(wep):
 def create_unit_list_embed(unit_list):
     e = discord.Embed(title="Query Results", desc="Query Results",
                       color=get_color(None))
+    index = 1
     for name, unit_type in unit_list:
-        e.add_field(name=name, value="*{0}*".format(unit_type), inline=False)
+        e.add_field(name="{0}. {1}".format(index, name),
+                    value="*{0}*".format(unit_type), inline=False)
+        index += 1
     return e
 
 

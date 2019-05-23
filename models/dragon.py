@@ -78,7 +78,9 @@ class Dragon:
                 self.level = level
 
     def _get_dragon(self, db):
-        result = db.query(Dragon.dragon_query_text, (self.name,))
+        result = db.query(Dragon.dragon_query_exact_text, (self.name,))
+        if result is None or result == []:
+            result = db.query(Dragon.dragon_query_text, (self.name,))
         if result is None or result == []:
             result = db.query(Dragon.alias_query_text, (self.name,))
         if result is None or result == []:
@@ -108,6 +110,21 @@ class Dragon:
         for ability in map(Ability._make, result):
             self.abilities.append(ability)
 
+    dragon_query_exact_text = '''
+    SELECT D.DragonID
+        , ET.Name AS "ElementTypeName"
+        , D.Rarity
+        , D.HP
+        , D.STR
+        , D.ReleaseDate
+        , D.Name
+        , D.Limited
+    FROM Dragons D
+        INNER JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID
+    WHERE D.Name = ? COLLATE NOCASE
+    ORDER BY D.ReleaseDate ASC
+    LIMIT 1
+    '''
     dragon_query_text = '''
     SELECT D.DragonID
         , ET.Name AS "ElementTypeName"

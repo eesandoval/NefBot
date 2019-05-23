@@ -80,7 +80,9 @@ class Weapon:
                 self.level = level
 
     def _get_weapon(self, db):
-        result = db.query(Weapon.weapon_query_text, (self.name,))
+        result = db.query(Weapon.weapon_query_exact_text, (self.name,))
+        if result is None or result == []:
+            result = db.query(Weapon.weapon_query_text, (self.name,))
         if result is None or result == []:
             result = db.query(Weapon.alias_query_text, (self.name,))
         if result is None or result == []:
@@ -139,6 +141,23 @@ class Weapon:
             materials[material[0]] = material[1]
         return materials
 
+    weapon_query_exact_text = '''
+    SELECT D.WeaponID
+        , lower(ET.Name) AS "ElementTypeName"
+        , WT.Name AS "WeaponTypeName"
+        , D.Rarity
+        , D.MaxHP
+        , D.MaxSTR
+        , D.ReleaseDate
+        , D.Name
+        , D.Limited
+    FROM Weapons D
+        LEFT JOIN ElementTypes ET ON ET.ElementTypeID = D.ElementTypeID
+        INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = D.WeaponTypeID
+    WHERE D.Name LIKE '%' || ? || '%' COLLATE NOCASE
+    ORDER BY D.ReleaseDate ASC
+    LIMIT 1
+    '''
     weapon_query_text = '''
     SELECT D.WeaponID
         , lower(ET.Name) AS "ElementTypeName"
@@ -156,7 +175,6 @@ class Weapon:
     ORDER BY D.ReleaseDate ASC
     LIMIT 1
     '''
-
     abilities_query_text = '''
     SELECT A.Name
         , A.Description
@@ -167,7 +185,6 @@ class Weapon:
         AND DA.Level = ?
     ORDER BY DA.Slot ASC, DA.Level ASC
     '''
-
     skills_query_text = '''
     SELECT S.Name
         , CASE ?
@@ -180,7 +197,6 @@ class Weapon:
         INNER JOIN Skills S ON S.SkillID = DS.SkillID
     WHERE DS.WeaponID = ?
     '''
-
     upgrades_to_query_text = '''
     SELECT WTo.Name
         , WTo.WeaponID
@@ -188,7 +204,6 @@ class Weapon:
         INNER JOIN Weapons WTo ON WTo.WeaponID = WU.WeaponToID
     WHERE WU.WeaponFromID = ?
     '''
-
     upgrades_from_query_text = '''
     SELECT WFrom.Name
         , WFrom.WeaponID
@@ -196,7 +211,6 @@ class Weapon:
         INNER JOIN Weapons WFrom ON WFrom.WeaponID = WU.WeaponFromID
     WHERE WU.WeaponToID = ?
     '''
-
     materials_query_text = '''
     SELECT M.Name
         , WM.Quantity
@@ -204,7 +218,6 @@ class Weapon:
         INNER JOIN Materials M ON M.MaterialID = WM.MaterialID
     WHERE WM.WeaponID = ?
     '''
-
     weapon_search_query_text = '''
     SELECT DISTINCT W.Name
     FROM Weapons W
@@ -216,7 +229,6 @@ class Weapon:
         LEFT JOIN Abilities A ON A.AbilityID = DA.AbilityID
     WHERE 1=1
     '''
-
     alias_query_text = '''
     SELECT W.WeaponID
         , lower(ET.Name) AS "ElementTypeName"
@@ -236,7 +248,6 @@ class Weapon:
     ORDER BY W.ReleaseDate ASC
     LIMIT 1
     '''
-
     id_query_text = '''
     SELECT WeaponID, Name
     FROM Weapons

@@ -68,7 +68,9 @@ class Wyrmprint:
                 self._get_abilities(db, level)
 
     def _get_wyrmprint(self, db):
-        result = db.query(Wyrmprint.wyrmprint_query_text, (self.name,))
+        result = db.query(Wyrmprint.wyrmprint_query_exact_text, (self.name,))
+        if result is None or result == []:
+            result = db.query(Wyrmprint.wyrmprint_query_text, (self.name,))
         if result is None or result == []:
             result = db.query(Wyrmprint.alias_query_text, (self.name,))
         if result is None or result == []:
@@ -90,6 +92,19 @@ class Wyrmprint:
         for ability in map(Ability._make, result):
             self.abilities.append(ability)
 
+    wyrmprint_query_exact_text = '''
+    SELECT W.WyrmprintID
+        , W.Rarity
+        , W.MaxHP
+        , W.MaxSTR
+        , W.ReleaseDate
+        , W.Name
+        , W.Limited
+    FROM Wyrmprints W
+    WHERE W.Name = ? COLLATE NOCASE
+    ORDER BY W.ReleaseDate ASC
+    LIMIT 1
+    '''
     wyrmprint_query_text = '''
     SELECT W.WyrmprintID
         , W.Rarity

@@ -77,7 +77,9 @@ class Adventurer:
                 self._get_abilities(db, level)
 
     def _get_adventurer(self, db):
-        result = db.query(Adventurer.adventurer_query_text, (self.name,))
+        result = db.query(Adventurer.adventurer_query_exact_text, (self.name,))
+        if result is None or result == []:
+            result = db.query(Adventurer.adventurer_query_text, (self.name,))
         if result is None or result == []:
             result = db.query(Adventurer.alias_query_text, (self.name,))
         if result is None or result == []:
@@ -116,6 +118,28 @@ class Adventurer:
         for ability in map(Ability._make, result):
             self.abilities.append(ability)
 
+    adventurer_query_exact_text = '''
+    SELECT A.AdventurerID
+        , A.Title
+        , A.Rarity
+        , ET.Name AS "ElementType"
+        , WT.Name AS "WeaponType"
+        , A.MaxHP
+        , A.MaxSTR
+        , A.MaxCoOp
+        , A.Defense
+        , A.ReleaseDate
+        , UT.Name AS "UnitType"
+        , A.Name
+        , A.Limited
+    FROM Adventurers A
+        INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
+        INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
+        INNER JOIN UnitTypes UT ON UT.UnitTypeID = A.UnitTypeID
+    WHERE A.Name = ? COLLATE NOCASE
+    ORDER BY A.ReleaseDate ASC
+    LIMIT 1
+    '''
     adventurer_query_text = '''
     SELECT A.AdventurerID
         , A.Title
