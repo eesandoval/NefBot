@@ -47,8 +47,6 @@ def start_discord_bot():
 
 
 # region Reaction Processing
-
-
 def process_adventurers_reaction(emoji, adv):
     if emoji == "\U0001F5BC":  # Full picture
         return create_dynamic_portrait_embed(adv, "adventurers/full")
@@ -96,8 +94,6 @@ reaction_functions = {"adv": process_adventurers_reaction,
 
 
 # region Discord Commands
-
-
 @client.command(name="exit",
                 description="Shuts down the bot",
                 brief="Shuts down the bot (authorized users only)",
@@ -224,16 +220,18 @@ async def query(ctx, *, criteria):
         unit_list = controller.query(convert_args_to_dict(criteria))
         values = [i for i in range(1, len(unit_list) + 1)]
         embed = create_unit_list_embed(unit_list)
-        await ctx.send(embed=embed)
+        query_message = await ctx.send(embed=embed)
     except Exception as e:
         await show_exception(ctx, e)
     try:
         message = await client.wait_for("message", check=check, timeout=60.0)
         unit_type = unit_list[int(message.content) - 1][1]
         unit_name = unit_list[int(message.content) - 1][0]
+        await message.delete()
+        await query_message.delete()
         await get_commands[unit_type](ctx, unit_name)
     except asyncio.TimeoutError:
-        pass
+        await query_message.delete()
 
 
 @client.command(name="update",
@@ -508,13 +506,10 @@ def create_events_embed(current_events):
 
 
 # region Helper Functions
-
-
 def get_emoji_element(elementtype):
-    try:
-        return config.element_emoji[elementtype]
-    except KeyError:
-        return ""
+    if elementtype in config.element_emoji:
+        return config.element_colors[elementtype]
+    return ""
 
 
 def get_emoji_weapon(weapontype):
