@@ -67,7 +67,7 @@ class Config:
         self.wyr_reactions = ["\U0001F5BC", "\U0001F3A8",
                               "\U0001F508", "\U0001F509", "\U0001F50A"]
 
-        self.dra_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F50A"]
+        self.dra_reactions = ["\U0001F5BC", "\U0001F508", "\U0001F509"]
 
         self.wep_reactions = ["\U0001F508", "\U0001F50A",
                               "\U000023EA", "\U000023E9"]
