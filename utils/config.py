@@ -55,6 +55,8 @@ class Config:
         self.eldwater_emoji = config["OtherEmojis"]["Eldwater"]
         self.gamepedia_url = config["Other"]["GamepediaURL"] + "{0}"
         self.element_colors = dict(config.items("ElementColors"))
+        self.authorized_updates = config.getboolean("Discord",
+                                                    "AuthorizedUpdates")
 
     def set_config_file(self, config_file):
         project_root = dirname(dirname(__file__))

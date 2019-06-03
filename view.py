@@ -243,9 +243,14 @@ async def query(ctx, *, criteria):
                 aliases=["u"])
 async def update(ctx):
     global config
-    config = Config("config.ini")
-    controller.handle_update(config.picture_server)
-    await ctx.send("Update completed")
+    if (not(config.authorized_updates) or
+            config.authorized_ids == [] or
+            ctx.message.author.id in config.authorized_ids):
+        config = Config("config.ini")
+        controller.handle_update(config.picture_server)
+        await ctx.send("Update completed")
+    else:
+        await ctx.send("User is not authorized to update this bot")
 
 
 @client.command(name="alias",
