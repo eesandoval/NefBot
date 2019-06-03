@@ -73,17 +73,17 @@ When pulling up weapons, using the fast foward reaction button you can view the 
 Additionally, as seen above, there exists a rewind reaction to view where this weapon comes from and the materials needed.
 
 ## Querying
-<img src="https://i.imgur.com/pVo9G9N.png" width="400">
+<img src="https://i.imgur.com/mAN92XY.png" width="400">
 
-You can use a query function to find adventurers, dragons, or wyrmprints with specific skills, abilities, rarities, element, weapon, etc.
+You can use a query function to find adventurers, dragons, wyrmprints, or weapons with specific skills, abilities, rarities, element, weapon, etc.
 ```
-^query type=(a|w|d) key=value
+^query key=value
 ```
-Key is defined as an attribute (such as element or weapon) where value is the value of the key. Multiple key value pairs can be given. If the value has spaces, surround it with quotes. Below is an example searching for adventurers with the Bog Res ability at 100%.
+Key is defined as an attribute (such as element or weapon) where value is the value of the key. Multiple key value pairs can be given. If the value has spaces, surround it with quotes. Below is an example searching for anything with the Bog Res ability at 100% and with an element of wind.
 ```
-^query type=adv ability="Bog Res +100%"
+^query ability="Bog Res +100%" element=Wind
 ```
-Be warned this will return ALL results, and may spam the chat log. Use at your own discretion.
+A list of items will appear, and the user can specify the number to select the option they want.
 
 ## Additional Commands
 
@@ -95,13 +95,13 @@ For help with any additional commands, please see the help menu using the below 
 # Installation
 ## Requirements
 - [Python 3.6 or higher](https://www.python.org/)
-- [discord.py 0.16.12](https://github.com/Rapptz/discord.py)
+- [discord.py (rewrite branch)](https://github.com/Rapptz/discord.py)
 
 ## Instructions 
 1. If not installed, download [Python 3.6 or higher](https://www.python.org) 
-2. Once installed, open a command prompt window or terminal window and type the following to install [discord.py 0.16.12](https://github.com/Rapptz/discord.py):
+2. Once installed, open a command prompt window or terminal window and type the following to install [discord.py](https://github.com/Rapptz/discord.py):
 ```
-python -m pip install discord.py==0.16.12
+python -m pip install -U discord.py
 ```
 3. Go to the [DiscordApp developers application site](https://discordapp.com/developers/applications) and create a New Application
 4. Name the application anything you'd like
@@ -110,9 +110,10 @@ python -m pip install discord.py==0.16.12
 7. Visit the following URL, replacing the CLIENT_ID in it with the client id you copied down: https://discordapp.com/oauth2/authorize?client_id=CLIENT_IDscope=bot
 8. Select the server you want the bot to appear in
 9. Copy the token from the bot page
-10. Set the TOKEN parameter in the config_example.py file that you copied from the previous stip into the file
-11. Change the name of the config_example.py -> config.py
-12. Run the bot using the following command in the command prompt or terminal 
+10. Copy the example config file and rename it: config_example.ini -> config.ini
+11. Set the TOKEN parameter in the config.ini file 
+12. Optional: Set additional parameters in the config.ini as desired
+13. Run the bot using the following command in the command prompt or terminal 
 ```
 python main.py
 ```
