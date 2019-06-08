@@ -513,7 +513,7 @@ def create_events_embed(current_events):
 # region Helper Functions
 def get_emoji_element(elementtype):
     if elementtype in config.element_emoji:
-        return config.element_colors[elementtype]
+        return config.element_emoji[elementtype]
     return ""
 
 
