@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 import urllib.request
+import threading
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
@@ -29,7 +30,10 @@ from models.weapon import Weapon
 from models.alias import create_update_alias, delete_alias
 from models.events import Event
 from models.database import Database
+from utils.config import Config
 from view import start_discord_bot
+
+config = Config("config.ini")
 
 
 def query(criteria):
@@ -186,5 +190,17 @@ def handle_update(remote_url):
     urllib.request.urlretrieve(url, "master.db")
 
 
+def continous_updates(event_thread):
+    handle_update(config.picture_server)
+    thread = threading.Timer(86400, continous_updates, [event_thread])
+    if not event_thread.is_set():
+        thread.start()
+    else:
+        thread.cancel()
+
+
 def start():
+    event_thread = threading.Event()
+    continous_updates(event_thread)
     start_discord_bot()
+    event_thread.set()
