@@ -96,12 +96,14 @@ For help with any additional commands, please see the help menu using the below 
 ## Requirements
 - [Python 3.6 or higher](https://www.python.org/)
 - [discord.py (rewrite branch)](https://github.com/Rapptz/discord.py)
+- [schedule](https://github.com/dbader/schedule)
 
 ## Instructions 
 1. If not installed, download [Python 3.6 or higher](https://www.python.org) 
-2. Once installed, open a command prompt window or terminal window and type the following to install [discord.py](https://github.com/Rapptz/discord.py):
+2. Once installed, open a command prompt window or terminal window and type the following to install [discord.py](https://github.com/Rapptz/discord.py) and [schedule](https://github.com/dbader/schedule):
 ```
 python -m pip install -U discord.py
+python -m pip install schedule
 ```
 3. Go to the [DiscordApp developers application site](https://discordapp.com/developers/applications) and create a New Application
 4. Name the application anything you'd like

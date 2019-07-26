@@ -247,7 +247,7 @@ async def update(ctx):
             config.authorized_ids == [] or
             ctx.message.author.id in config.authorized_ids):
         config = Config("config.ini")
-        controller.handle_update(config.picture_server)
+        controller.handle_update()
         await ctx.send("Update completed")
     else:
         await ctx.send("User is not authorized to update this bot")

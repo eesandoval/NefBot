@@ -23,6 +23,8 @@ SOFTWARE.
 '''
 import urllib.request
 import threading
+import schedule
+import time
 from models.adventurer import Adventurer
 from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
@@ -185,22 +187,24 @@ def handle_current_events():
     return Event.get_current_events()
 
 
-def handle_update(remote_url):
-    url = remote_url + "database/master.db"
+def handle_update():
+    print("UPDATING")
+    url = config.picture_server + "database/master.db"
     urllib.request.urlretrieve(url, "master.db")
 
 
 def continous_updates(event_thread):
-    handle_update(config.picture_server)
-    thread = threading.Timer(86400, continous_updates, [event_thread])
-    if not event_thread.is_set():
-        thread.start()
-    else:
-        thread.cancel()
+    schedule.every(1).minute.do(handle_update)
+    while (not event_thread.is_set()):
+        schedule.run_pending()
+        time.sleep(1)
 
 
 def start():
-    event_thread = threading.Event()
-    continous_updates(event_thread)
+    if config.automatic_updates:
+        event_thread = threading.Event()
+        thread = threading.Timer(1, continous_updates, [event_thread])
+        thread.start()
     start_discord_bot()
-    event_thread.set()
+    if config.automatic_updates:
+        event_thread.set()

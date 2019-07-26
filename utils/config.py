@@ -57,6 +57,7 @@ class Config:
         self.element_colors = dict(config.items("ElementColors"))
         self.authorized_updates = config.getboolean("Discord",
                                                     "AuthorizedUpdates")
+        self._set_automatic_updates(config)
 
     def set_config_file(self, config_file):
         project_root = dirname(dirname(__file__))
@@ -73,3 +74,10 @@ class Config:
 
         self.wep_reactions = ["\U0001F508", "\U0001F50A",
                               "\U000023EA", "\U000023E9"]
+
+    def _set_automatic_updates(self, config):
+        if config.has_option("Discord", "AutomaticUpdates"):
+            self.automatic_updates = config.getboolean("Discord",
+                                                       "AutomaticUpdates")
+        else:
+            self.automatic_updates = False
