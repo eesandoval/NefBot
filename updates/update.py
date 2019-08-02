@@ -33,10 +33,9 @@ def get_filtered_names(sub_url, from_date):
     return result
 
 
-def get_portraits(sub_url, directory, from_date):
-    print("--- Getting portraits from " + sub_url + " ---")
+def get_portraits(names, directory):
+    print("--- Getting portraits for " + directory + " ---")
     os.makedirs(directory, exist_ok=True)
-    names = get_filtered_names(sub_url, from_date)
     for name, tr in names.items():
         pretty_name = pretty_print_name(name)
         print("Processing " + pretty_name)
@@ -44,10 +43,9 @@ def get_portraits(sub_url, directory, from_date):
         urlretrieve(image, directory + pretty_name + ".png")
 
 
-def get_pictures(sub_url, directory, from_date, i=0):
-    print("--- Getting pictures from " + sub_url + " ---")
+def get_pictures(names, directory, i=0):
+    print("--- Getting pictures for " + directory + " ---")
     os.makedirs(directory, exist_ok=True)
-    names = get_filtered_names(sub_url, from_date)
     for name, _ in names.items():
         pretty_name = pretty_print_name(name)
         print("Processing " + pretty_name)
@@ -62,18 +60,23 @@ def get_pictures(sub_url, directory, from_date, i=0):
         urlretrieve(image, directory + pretty_name + ".png")
 
 
-if __name__ == "__main__":
+def update_items(item, sub_url):
     from_date = date.today() - timedelta(days=7)
+    names = get_filtered_names(sub_url, from_date)
+    get_portraits(names, item + "/portraits/")
+    if item == "wyrmprints":  # Wyrmrpints have 2 pictures
+        get_pictures(names, item + "/base/")
+        get_pictures(names, item + "/full/", 1)
+        return
+    elif item == "weapons":  # Weapons have no pictures
+        return
+    get_pictures(names, item + "/full/")
+
+
+if __name__ == "__main__":
     retrieval_list = {"adventurers": "Adventurer_List",
                       "wyrmprints": "Wyrmprint_List",
                       "weapons": "Weapon_List",
                       "dragons": "Dragon_List"}
     for k, v in retrieval_list.items():
-        get_portraits(v, k + "/portraits/", from_date)
-        if k == "wyrmprints":  # Wyrmrpints have 2 pictures
-            get_pictures(v, k + "/base/", from_date)
-            get_pictures(v, k + "/full/", from_date, 1)
-        elif k == "weapons":  # Weapons have no pictures
-            continue
-        else:
-            get_pictures(v, k + "/full/", from_date)
+        update_items(k, v)
