@@ -9,7 +9,6 @@ This folder and the contents within are for updating the server that the databas
 ## Requirements
 - [Python 3.6 or higher](https://www.python.org/)
 - [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/)
-- [schedule](https://github.com/dbader/schedule)
 
 ## Instructions 
 1. If not installed, download [Python 3.6 or higher](https://www.python.org) 

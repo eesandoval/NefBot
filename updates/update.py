@@ -3,6 +3,7 @@ from urllib.request import urlopen
 from urllib.request import urlretrieve
 from datetime import date, timedelta, datetime
 import os
+import sys
 
 
 main_url = "https://dragalialost.gamepedia.com"
@@ -60,8 +61,8 @@ def get_pictures(names, directory, i=0):
         urlretrieve(image, directory + pretty_name + ".png")
 
 
-def update_items(item, sub_url):
-    from_date = date.today() - timedelta(days=7)
+def update_items(item, sub_url, lookback_period_days):
+    from_date = date.today() - timedelta(days=lookback_period_days)
     names = get_filtered_names(sub_url, from_date)
     get_portraits(names, item + "/portraits/")
     if item == "wyrmprints":  # Wyrmrpints have 2 pictures
@@ -78,5 +79,8 @@ if __name__ == "__main__":
                       "wyrmprints": "Wyrmprint_List",
                       "weapons": "Weapon_List",
                       "dragons": "Dragon_List"}
+    lookback_period_days = 7
+    if len(sys.argv) > 1 and sys.argv[1].isdigit():
+        lookback_period_days = int(sys.argv[1])
     for k, v in retrieval_list.items():
-        update_items(k, v)
+        update_items(k, v, lookback_period_days)
