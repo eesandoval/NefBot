@@ -179,6 +179,7 @@ class Adventurer:
     SELECT A.Name
         , A.Description
         , Ads.Level
+        , A.Limited
     FROM AdventurerAbilities Ads
         INNER JOIN Abilities A ON A.AbilityID = Ads.AbilityID
     WHERE Ads.AdventurerID = ?

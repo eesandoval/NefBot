@@ -179,6 +179,7 @@ class Weapon:
     SELECT A.Name
         , A.Description
         , DA.Level
+        , A.Limited
     FROM WeaponAbilities DA
         INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
     WHERE DA.WeaponID = ?

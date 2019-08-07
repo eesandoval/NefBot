@@ -122,6 +122,7 @@ class Wyrmprint:
     SELECT A.Name
         , A.Description
         , WA.Level
+        , A.Limited
     FROM WyrmprintAbilities WA
         INNER JOIN Abilities A ON A.AbilityID = WA.AbilityID
     WHERE WA.WyrmprintID = ?

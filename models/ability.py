@@ -24,5 +24,5 @@ SOFTWARE.
 from collections import namedtuple
 
 
-class Ability(namedtuple("Skill", "name, description, level")):
+class Ability(namedtuple("Skill", "name, description, level, limited")):
     pass

@@ -145,6 +145,7 @@ class Dragon:
     SELECT A.Name
         , A.Description
         , DA.Level
+        , A.Limited
     FROM DragonAbilities DA
         INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
     WHERE DA.DragonID = ?

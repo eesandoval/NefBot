@@ -2,7 +2,7 @@
 1. [About](#about)
 2. [Installation](#installation)
 # About
-This folder and the contents within are for updating the server that the database and pictures sit on. To run this update, execute the update.py file which will utilize the gamepedia site to get images and information to load into the database
+This folder and the contents within are for updating the server that the database and pictures sit on. To run this update, execute the update.py file which will utilize the gamepedia site to get images and information to load into the database. Please note this is only if you wish to change the server location where the remote database and pictures are stored (picture server in the config file). If you're fine with the default one, the contents of this folder do not apply.
 
 
 # Installation

@@ -391,7 +391,8 @@ def create_wyrmprint_embed(wyr):
                 inline=True)
     ability_format = "Ability: {0}"
     for ability in wyr.abilities:
-        e.add_field(name=ability_format.format(ability.name),
+        e.add_field(name=ability_format.format(ability.name) +
+                    get_emoji_limited(ability.limited),
                     value=ability.description, inline=False)
     return e
 
@@ -532,6 +533,8 @@ def get_emoji_rarity(rarity):
 def get_emoji_limited(limited):
     if limited == 1:
         return config.limited_emoji
+    elif limited == 2:
+        return " \U0000274C"
     return ""
 
 
