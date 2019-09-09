@@ -10,6 +10,22 @@ main_url = "https://dragalialost.gamepedia.com"
 bs_features = "html.parser"
 
 
+def db_update_adventurers(names):
+    pass 
+
+
+def db_update_dragons(names):
+    pass 
+
+
+def db_update_wyrmprints(names):
+    pass 
+
+
+def db_update_weapons(names):
+    pass 
+
+
 def pretty_print_name(name):
     return name.strip('/').replace('_', ' ').replace('%27', "'")
 
@@ -68,9 +84,15 @@ def update_items(item, sub_url, lookback_period_days):
     if item == "wyrmprints":  # Wyrmrpints have 2 pictures
         get_pictures(names, item + "/base/")
         get_pictures(names, item + "/full/", 1)
+        db_update_wyrmprints(names)
         return
     elif item == "weapons":  # Weapons have no pictures
+        db_update_weapons(names)
         return
+    elif item == "dragons":
+        db_update_dragons(names)
+    elif item == "adventurers":
+        db_update_adventurers(names)
     get_pictures(names, item + "/full/")
 
 
