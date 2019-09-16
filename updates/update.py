@@ -8,22 +8,62 @@ import sys
 
 main_url = "https://dragalialost.gamepedia.com"
 bs_features = "html.parser"
+db_location = "/database/master.db"
+elements = {"Icon Element Flame.png": 1, "Icon Element Water.png": 2,
+            "Icon Element Wind.png": 3, "Icon Element Light.png": 4,
+            "Icon Element Shadow.png": 5}
+weapons = {"Icon Weapon Sword.png": 1, "Icon Weapon Blade.png": 2,
+           "Icon Weapon Dagger.png": 3, "Icon Weapon Axe.png": 4,
+           "Icon Weapon Lance.png": 5, "Icon Weapon Bow.png": 6,
+           "Icon Weapon Wand.png": 7, "Icon Weapon Staff.png": 8}
+unit_types = {"Icon Type Row Attack.png": 1, "Icon Type Row Defense.png": 2,
+              "Icon Type Row Healing.png": 3, "Icon Type Row Support.png": 4}
+rarities = {"Icon Rarity Row 1.png": 1, "Icon Rarity Row 2.png": 2,
+            "Icon Rarity Row 3.png": 3, "Icon Rarity Row 4.png": 4,
+            "Icon Rarity Row 5.png": 5}
+co_ops = {1: "Dragon Haste +15%", 2: "Strength +10%", 3: "Critical Rate +10%",
+          4: "Defense +15%", 5: "HP +15%", 6: "Skill Haste +15%",
+          7: "Skill Damage +15%", 8: "Recovery Potency +15%"}
+
+
+def remove_tooltip_info(text):
+    return text[text.index(')') + 1:text.index('(', text.index(')')) - 1]
 
 
 def db_update_adventurers(names):
-    pass 
+    for name in names:
+        url = main_url + '/' + name
+        content = urlopen(url).read()
+        soup = BeautifulSoup(content, bs_features)
+        panels = soup.find_all("div", class_="panel-heading")
+        title = panels[0].find_all("div")[0].text
+        images = soup.find_all("img")
+        element = elements[images[0]["alt"]]
+        weapon = weapons[images[1]["alt"]]
+        unit_type = unit_types[images[4]["alt"]]
+        rarity = rarities[images[5]["alt"]]
+        hp_str_tooltips = soup.find_all("span", class_="tooltip")
+        hp = remove_tooltip_info(hp_str_tooltips[0].text)
+        strength = remove_tooltip_info(hp_str_tooltips[1].text)
+        details = soup.find_all("div", class_="dd-description")
+        defense = details[2].text.strip()
+        release_date = details[12].text.strip()
+        limited = 1
+        if details[13].text.strip() == "Permanent":
+            limited = 0
+        co_op = co_ops[weapon]
 
 
 def db_update_dragons(names):
-    pass 
+    pass
 
 
 def db_update_wyrmprints(names):
-    pass 
+    pass
 
 
 def db_update_weapons(names):
-    pass 
+    pass
 
 
 def pretty_print_name(name):
