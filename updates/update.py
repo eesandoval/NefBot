@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from urllib.request import urlretrieve
 from datetime import date, timedelta, datetime
+from collections import namedtuple
+from database import Database
 import os
 import sys
 
@@ -24,6 +26,23 @@ rarities = {"Icon Rarity Row 1.png": 1, "Icon Rarity Row 2.png": 2,
 co_ops = {1: "Dragon Haste +15%", 2: "Strength +10%", 3: "Critical Rate +10%",
           4: "Defense +15%", 5: "HP +15%", 6: "Skill Haste +15%",
           7: "Skill Damage +15%", 8: "Recovery Potency +15%"}
+search_adv_query_text = '''
+SELECT AdventurerID
+FROM Adventurers
+WHERE Name = ? COLLATE NOCASE
+'''
+create_adv_text = '''
+INSERT INTO Adventurers
+(Name, Title, ElementTypeID, WeaponTypeID, UnitTypeID, MaxHP, MaxSTR, MaxCoOp,
+Limited, Rarity, ReleaseDate, Defense)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+'''
+update_adv_text = '''
+UPDATE Adventurers
+SET Name = ?, Title = ?, ElementTypeID = ?, WeaponTypeID = ?, UnitTypeID = ?,
+MaxHP = ?, MaxSTR = ?, MaxCoOp = ?, Limited = ?, Rarity = ?, ReleaseDate = ?,
+Defense = ? WHERE AdventurerID = ?
+'''
 
 
 def remove_tooltip_info(text):
@@ -32,26 +51,37 @@ def remove_tooltip_info(text):
 
 def db_update_adventurers(names):
     for name in names:
+        name = name[1:]
+        adv = {}
+        print("--- Updating DB For " + name + " ---")
+        adv["name"] = name
         url = main_url + '/' + name
         content = urlopen(url).read()
         soup = BeautifulSoup(content, bs_features)
         panels = soup.find_all("div", class_="panel-heading")
         title = panels[0].find_all("div")[0].text
-        images = soup.find_all("img")
-        element = elements[images[0]["alt"]]
-        weapon = weapons[images[1]["alt"]]
-        unit_type = unit_types[images[4]["alt"]]
-        rarity = rarities[images[5]["alt"]]
-        hp_str_tooltips = soup.find_all("span", class_="tooltip")
-        hp = remove_tooltip_info(hp_str_tooltips[0].text)
-        strength = remove_tooltip_info(hp_str_tooltips[1].text)
         details = soup.find_all("div", class_="dd-description")
-        defense = details[2].text.strip()
-        release_date = details[12].text.strip()
-        limited = 1
+        images = soup.find_all("img")
+        adv["elementtypeid"] = elements[panels[0].find_all("img")[0]["alt"]]
+        adv["weapontypeid"] = weapons[panels[0].find_all("img")[1]["alt"]]
+        adv["unittypeid"] = unit_types[details[3].find_all("img")[0]["alt"]]
+        adv["rarity"] = rarities[details[6].find_all("img")[0]["alt"]]
+        hp_str_tooltips = soup.find_all("span", class_="tooltip")
+        adv["hp"] = remove_tooltip_info(hp_str_tooltips[0].text)
+        adv["strength"] = remove_tooltip_info(hp_str_tooltips[1].text)
+        adv["defense"] = details[2].text.strip()
+        adv["releasedate"] = details[12].text.strip()
+        adv["limited"] = 1
         if details[13].text.strip() == "Permanent":
-            limited = 0
-        co_op = co_ops[weapon]
+            adv["limited"] = 0
+        adv["coop"] = co_ops[adv["weapontypeid"]]
+        adventurer_id = db_create_update_adventurer(adv)
+        skill_section = soup.find_all("div", class_="skill-section")
+        skills_table = skill_section[0].find_all("table", class_="skill-table")
+        for skill_sub in skills_table:
+            skill_name = skill_sub.find_all('a')[0].text
+            # skill_id = db_update_skill(skill_name)
+            # db_create_update_skill_link(adventurer_id, skill_id)
 
 
 def db_update_dragons(names):
@@ -64,6 +94,40 @@ def db_update_wyrmprints(names):
 
 def db_update_weapons(names):
     pass
+
+
+def db_update_skill(name):
+    pass
+
+
+def db_create_update_adventurer(adventurer):
+    with Database(db_location) as db:
+        resultset = db.query(search_adv_query_text, (adventurer.name,))
+    if resultset is not None and len(resultset) > 0:
+        print("Creating adventurer " + adventurer.name)
+        db.execute(create_adv_text, (adventurer["name"], adventurer["title"],
+                                     adventurer["elementtypeid"],
+                                     adventurer["weapontypeid"],
+                                     adventurer["unittypeid"],
+                                     adventurer["hp"], adventurer["strength"],
+                                     adventurer["coop"], adventurer["limited"],
+                                     adventurer["rarity"],
+                                     adventurer["releasedate"],
+                                     adventurer["defense"],))
+        adv_id = db.query(search_adv_query_text, (adventurer.name,))[0][0]
+    else:
+        adv_id = resultset[0][0]
+        print("Updating adventurer " + adventurer.name + str(adv_id))
+        db.execute(update_adv_text, (adventurer["name"], adventurer["title"],
+                                     adventurer["elementtypeid"],
+                                     adventurer["weapontypeid"],
+                                     adventurer["unittypeid"],
+                                     adventurer["hp"], adventurer["strength"],
+                                     adventurer["coop"], adventurer["limited"],
+                                     adventurer["rarity"],
+                                     adventurer["releasedate"],
+                                     adventurer["defense"], adv_id,))
+    return int(adv_id)
 
 
 def pretty_print_name(name):
