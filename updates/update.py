@@ -10,7 +10,7 @@ import sys
 
 main_url = "https://dragalialost.gamepedia.com"
 bs_features = "html.parser"
-db_location = "/database/master.db"
+db_location = "database/master.db"
 elements = {"Icon Element Flame.png": 1, "Icon Element Water.png": 2,
             "Icon Element Wind.png": 3, "Icon Element Light.png": 4,
             "Icon Element Shadow.png": 5}
@@ -59,7 +59,7 @@ def db_update_adventurers(names):
         content = urlopen(url).read()
         soup = BeautifulSoup(content, bs_features)
         panels = soup.find_all("div", class_="panel-heading")
-        title = panels[0].find_all("div")[0].text
+        adv["title"] = panels[0].find_all("div")[0].text
         details = soup.find_all("div", class_="dd-description")
         images = soup.find_all("img")
         adv["elementtypeid"] = elements[panels[0].find_all("img")[0]["alt"]]
@@ -102,32 +102,38 @@ def db_update_skill(name):
 
 def db_create_update_adventurer(adventurer):
     with Database(db_location) as db:
-        resultset = db.query(search_adv_query_text, (adventurer.name,))
-    if resultset is not None and len(resultset) > 0:
-        print("Creating adventurer " + adventurer.name)
-        db.execute(create_adv_text, (adventurer["name"], adventurer["title"],
-                                     adventurer["elementtypeid"],
-                                     adventurer["weapontypeid"],
-                                     adventurer["unittypeid"],
-                                     adventurer["hp"], adventurer["strength"],
-                                     adventurer["coop"], adventurer["limited"],
-                                     adventurer["rarity"],
-                                     adventurer["releasedate"],
-                                     adventurer["defense"],))
-        adv_id = db.query(search_adv_query_text, (adventurer.name,))[0][0]
-    else:
-        adv_id = resultset[0][0]
-        print("Updating adventurer " + adventurer.name + str(adv_id))
-        db.execute(update_adv_text, (adventurer["name"], adventurer["title"],
-                                     adventurer["elementtypeid"],
-                                     adventurer["weapontypeid"],
-                                     adventurer["unittypeid"],
-                                     adventurer["hp"], adventurer["strength"],
-                                     adventurer["coop"], adventurer["limited"],
-                                     adventurer["rarity"],
-                                     adventurer["releasedate"],
-                                     adventurer["defense"], adv_id,))
-    return int(adv_id)
+        resultset = db.query(search_adv_query_text, (adventurer["name"],))
+        if resultset == []:
+            print("Creating adventurer " + adventurer["name"])
+            db.execute(create_adv_text, (adventurer["name"],
+                                         adventurer["title"],
+                                         adventurer["elementtypeid"],
+                                         adventurer["weapontypeid"],
+                                         adventurer["unittypeid"],
+                                         adventurer["hp"],
+                                         adventurer["strength"],
+                                         adventurer["coop"],
+                                         adventurer["limited"],
+                                         adventurer["rarity"],
+                                         adventurer["releasedate"],
+                                         adventurer["defense"],))
+            resultset = db.query(search_adv_query_text, (adventurer["name"],))
+        else:
+            adv_id = resultset[0][0]
+            print("Updating adventurer " + adventurer["name"] + str(adv_id))
+            db.execute(update_adv_text, (adventurer["name"],
+                                         adventurer["title"],
+                                         adventurer["elementtypeid"],
+                                         adventurer["weapontypeid"],
+                                         adventurer["unittypeid"],
+                                         adventurer["hp"],
+                                         adventurer["strength"],
+                                         adventurer["coop"],
+                                         adventurer["limited"],
+                                         adventurer["rarity"],
+                                         adventurer["releasedate"],
+                                         adventurer["defense"], adv_id,))
+    return int(resultset[0][0])
 
 
 def pretty_print_name(name):
