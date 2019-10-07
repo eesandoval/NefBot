@@ -53,8 +53,8 @@ def db_update_adventurers(names):
     for name in names:
         name = name[1:]
         adv = {}
-        print("--- Updating DB For " + name + " ---")
-        adv["name"] = name
+        adv["name"] = pretty_print_name(name)
+        print("--- Updating DB For " + adv["name"] + " ---")
         url = main_url + '/' + name
         content = urlopen(url).read()
         soup = BeautifulSoup(content, bs_features)
@@ -78,10 +78,10 @@ def db_update_adventurers(names):
         adventurer_id = db_create_update_adventurer(adv)
         skill_section = soup.find_all("div", class_="skill-section")
         skills_table = skill_section[0].find_all("table", class_="skill-table")
-        for skill_sub in skills_table:
-            skill_name = skill_sub.find_all('a')[0].text
-            # skill_id = db_update_skill(skill_name)
-            # db_create_update_skill_link(adventurer_id, skill_id)
+        for i in range(len(skills_table)):
+            skill_href = skills_table[i].find_all('a')[0]["href"]
+            skill_id = db_update_skill(skill_href)
+            db_create_update_skill_link(adventurer_id, skill_id, i)
 
 
 def db_update_dragons(names):
@@ -96,8 +96,21 @@ def db_update_weapons(names):
     pass
 
 
-def db_update_skill(name):
-    pass
+def db_create_update_skill(name):
+    def get_description(text):
+        result = text.replace('\n', '')
+        return result[0:reulst.find("SP CostAmount a skill")]
+    url = main_url + name
+    content = urlopen(url).read()
+    soup = BeautifulSoup(content, bs_features)
+    details = soup.find_all("div", class_="skill-levels skill-details")[0]
+    levels = details.find_all("div", class_="tabbertab")
+    descriptionlevel1 = get_description(levels[0].text)
+    descriptionlevel2 = get_description(levels[1].text)
+    descriptionlevel3 = None
+    if len(levels) > 2:
+        descriptionlevel3 = get_description(levels[2].text)
+    # sp_cost = 
 
 
 def db_create_update_adventurer(adventurer):
@@ -134,6 +147,10 @@ def db_create_update_adventurer(adventurer):
                                          adventurer["releasedate"],
                                          adventurer["defense"], adv_id,))
     return int(resultset[0][0])
+
+
+def db_create_update_skill_link(adventurer_id, skill_id, slot):
+    pass
 
 
 def pretty_print_name(name):
