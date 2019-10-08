@@ -357,9 +357,12 @@ def create_adventurer_embed(adv):
                 value="**Released**\n{0}"
                 .format(convert_ISO_date_to_string(adv.releasedate)),
                 inline=True)
-    skill_format = "Skill: {0} [SP Cost: {1}] [Frame Time: {2}]"
+    regen_format = " [SP Regen: {0} per second]"
     ability_format = "Ability: {0}"
     for skill in adv.skills:
+        skill_format = "Skill: {0} [SP Cost: {1}] [Frame Time: {2}]"
+        if skill.regen > 0:
+            skill_format += regen_format.format(skill.regen)
         e.add_field(name=skill_format.format(skill.name, skill.spcost,
                                              skill.frametime),
                     value=skill.description,
@@ -415,9 +418,12 @@ def create_dragon_embed(dra):
                 value="**Released**\n{0}"
                 .format(convert_ISO_date_to_string(dra.releasedate)),
                 inline=True)
-    skill_format = "Skill: {0}"
     ability_format = "Ability: {0}"
+    regen_format = " [SP Regen: {0} per second]"
     for skill in dra.skills:
+        skill_format = "Skill: {0}"
+        if skill.regen > 0:
+            skill_format += regen_format.format(skill.regen)
         e.add_field(name=skill_format.format(skill.name),
                     value=skill.description, inline=False)
     for ability in dra.abilities:
@@ -443,9 +449,12 @@ def create_weapon_embed(wep):
                 get_emoji_limited(wep.limited),
                 value=convert_ISO_date_to_string(wep.releasedate),
                 inline=True)
-    skill_format = "Skill: {0} [SP Cost: {1}] [Frame Time: {2}]"
     ability_format = "Ability: {0}"
+    regen_format = " [SP Regen: {0} per second]"
     for skill in wep.skills:
+        skill_format = "Skill: {0} [SP Cost: {1}] [Frame Time: {2}]"
+        if skill.regen > 0:
+            skill_format += regen_format.format(skill.regen)
         e.add_field(name=skill_format.format(skill.name, skill.spcost,
                                              skill.frametime),
                     value=skill.description,

@@ -194,6 +194,7 @@ class Weapon:
         END AS Description
         , S.SPCost
         , S.FrameTime
+        , S.Regen
     FROM WeaponSkills DS
         INNER JOIN Skills S ON S.SkillID = DS.SkillID
     WHERE DS.WeaponID = ?

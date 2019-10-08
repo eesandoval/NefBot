@@ -171,6 +171,7 @@ class Adventurer:
         END AS Description
         , S.SPCost
         , S.FrameTime
+        , S.Regen
     FROM AdventurerSkillS Ads
         INNER JOIN Skills S ON S.SKillID = Ads.SkillID
     WHERE Ads.AdventurerID = ?

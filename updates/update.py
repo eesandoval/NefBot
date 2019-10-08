@@ -110,7 +110,6 @@ def db_create_update_skill(name):
     descriptionlevel3 = None
     if len(levels) > 2:
         descriptionlevel3 = get_description(levels[2].text)
-    # sp_cost = 
 
 
 def db_create_update_adventurer(adventurer):

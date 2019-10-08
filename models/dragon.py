@@ -161,6 +161,7 @@ class Dragon:
         END AS Description
         , S.SPCost
         , S.FrameTime
+        , S.Regen
     FROM DragonSkills DS
         INNER JOIN Skills S ON S.SkillID = DS.SkillID
     WHERE DS.DragonID = ?
