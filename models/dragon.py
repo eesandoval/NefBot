@@ -146,6 +146,7 @@ class Dragon:
         , A.Description
         , DA.Level
         , A.Limited
+        , A.WyrmprintAbilityCap
     FROM DragonAbilities DA
         INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
     WHERE DA.DragonID = ?

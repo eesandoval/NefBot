@@ -181,6 +181,7 @@ class Adventurer:
         , A.Description
         , Ads.Level
         , A.Limited
+        , A.WyrmprintAbilityCap
     FROM AdventurerAbilities Ads
         INNER JOIN Abilities A ON A.AbilityID = Ads.AbilityID
     WHERE Ads.AdventurerID = ?

@@ -392,9 +392,9 @@ def create_wyrmprint_embed(wyr):
                 value="**Released**\n{0}"
                 .format(convert_ISO_date_to_string(wyr.releasedate)),
                 inline=True)
-    ability_format = "Ability: {0}"
+    ability_format = "Ability: {0} [Ability Cap: {1}]"
     for ability in wyr.abilities:
-        e.add_field(name=ability_format.format(ability.name) +
+        e.add_field(name=ability_format.format(ability.name, ability.cap) +
                     get_emoji_limited(ability.limited),
                     value=ability.description, inline=False)
     return e

@@ -180,6 +180,7 @@ class Weapon:
         , A.Description
         , DA.Level
         , A.Limited
+        , A.WyrmprintAbilityCap
     FROM WeaponAbilities DA
         INNER JOIN Abilities A ON A.AbilityID = DA.AbilityID
     WHERE DA.WeaponID = ?
