@@ -237,16 +237,18 @@ async def query(ctx, *, criteria):
 @client.command(name="update",
                 description='''
                 Resets the configuration and updates the bot using the
-                new values set in the config.ini file
+                new values set in the config.ini file. Also grabs the
+                latest database image from the URL set in the config
                 ''',
-                brief="Updates the bot's configurations",
+                brief="Updates the bot's configurations and database",
                 aliases=["u"])
 async def update(ctx):
     global config
     if (not(config.authorized_updates) or
             config.authorized_ids == [] or
             ctx.message.author.id in config.authorized_ids):
-        config = Config("config.ini")
+        config.update()
+        await update_status()
         controller.handle_update()
         await ctx.send("Update completed")
     else:
@@ -286,13 +288,17 @@ async def events(ctx):
 
 
 # region Client Events
-@client.event
-async def on_ready():
+async def update_status():
     activity = discord.Game(name=config.current_event)
     if config.streaming:
         activity = discord.Streaming(name=config.current_event,
                                      url=config.stream_URL)
     await client.change_presence(activity=activity)
+
+
+@client.event
+async def on_ready():
+    await update_status()
 
 
 @client.event
