@@ -43,6 +43,23 @@ SET Name = ?, Title = ?, ElementTypeID = ?, WeaponTypeID = ?, UnitTypeID = ?,
 MaxHP = ?, MaxSTR = ?, MaxCoOp = ?, Limited = ?, Rarity = ?, ReleaseDate = ?,
 Defense = ? WHERE AdventurerID = ?
 '''
+search_skill_query_text = '''
+SELECT SkillID
+FROM Skills
+WHERE Name = ? COLLATE NOCASE
+'''
+create_skill_text = '''
+INSERT INTO Skills
+(Name, DescriptionLevel1, DescriptionLevel2, DescriptionLevel3, SPCost,
+FrameTime, Regen)
+VALUES (?, ?, ?, ? , ?, ?, ?)
+'''
+update_skill_text = '''
+UPDATE Skills
+SET Name = ?, DescriptionLevel1 = ?, DescriptionLevel2 = ?,
+DescriptionLevel3 = ?, SPCost = ?, FrameTime = ?, Regen = ?
+WHERE SkillID = ?
+'''
 
 
 def remove_tooltip_info(text):
@@ -96,20 +113,48 @@ def db_update_weapons(names):
     pass
 
 
-def db_create_update_skill(name):
+def db_update_skill(name):
     def get_description(text):
         result = text.replace('\n', '')
         return result[0:reulst.find("SP CostAmount a skill")]
+    skill = {}
     url = main_url + name
     content = urlopen(url).read()
     soup = BeautifulSoup(content, bs_features)
     details = soup.find_all("div", class_="skill-levels skill-details")[0]
     levels = details.find_all("div", class_="tabbertab")
-    descriptionlevel1 = get_description(levels[0].text)
-    descriptionlevel2 = get_description(levels[1].text)
-    descriptionlevel3 = None
+    skill["descriptionlevel1"] = get_description(levels[0].text)
+    skill["descriptionlevel2"] = get_description(levels[1].text)
+    skill["descriptionlevel3"] = None
     if len(levels) > 2:
-        descriptionlevel3 = get_description(levels[2].text)
+        skill["descriptionlevel3"] = get_description(levels[2].text)
+    return db_create_update_skill(skill)
+
+
+def db_create_update_skill(skill):
+    with Database(db_location) as db:
+        resultset = db.query(search_skill_query_text, (skill["name"],))
+        if resultset == []:
+            print("Create skill " + skill["name"])
+            db.execute(create_skill_text, (skill["name"],
+                                           skill["descriptionlevel1"],
+                                           skill["descriptionlevel2"],
+                                           skill["descriptionlevel3"],
+                                           skill["spcost"],
+                                           skill["frametime"],
+                                           skill["regen"],))
+            resultset = db.query(search_skill_query_text, (skill["name"],))
+        else:
+            skill_id = resultset[0][0]
+            print("Updating skill " + skill["name"] + str(skill_id))
+            db.execute(update_skill_text, (skill["name"],
+                                           skill["descriptionlevel1"],
+                                           skill["descriptionlevel2"],
+                                           skill["descriptionlevel3"],
+                                           skill["spcost"],
+                                           skill["frametime"],
+                                           skill["regen"], skill_id,))
+    return int(resultset[0][0])
 
 
 def db_create_update_adventurer(adventurer):
@@ -203,22 +248,26 @@ def get_pictures(names, directory, i=0):
         urlretrieve(image, directory + pretty_name + ".png")
 
 
-def update_items(item, sub_url, lookback_period_days):
+def update_items(item, sub_url, lookback_period_days, update_db):
     from_date = date.today() - timedelta(days=lookback_period_days)
     names = get_filtered_names(sub_url, from_date)
     get_portraits(names, item + "/portraits/")
     if item == "wyrmprints":  # Wyrmrpints have 2 pictures
         get_pictures(names, item + "/base/")
         get_pictures(names, item + "/full/", 1)
-        db_update_wyrmprints(names)
+        if update_db:
+            db_update_wyrmprints(names)
         return
     elif item == "weapons":  # Weapons have no pictures
-        db_update_weapons(names)
+        if update_db:
+            db_update_weapons(names)
         return
     elif item == "dragons":
-        db_update_dragons(names)
+        if update_db:
+            db_update_dragons(names)
     elif item == "adventurers":
-        db_update_adventurers(names)
+        if update_db:
+            db_update_adventurers(names)
     get_pictures(names, item + "/full/")
 
 
@@ -228,7 +277,10 @@ if __name__ == "__main__":
                       "weapons": "Weapon_List",
                       "dragons": "Dragon_List"}
     lookback_period_days = 7
+    update_db = False
     if len(sys.argv) > 1 and sys.argv[1].isdigit():
         lookback_period_days = int(sys.argv[1])
+    if len(sys.argv) > 2 and sys.argv[2].isdigit() and sys.argv[2] > 0:
+        update_db = True
     for k, v in retrieval_list.items():
-        update_items(k, v, lookback_period_days)
+        update_items(k, v, lookback_period_days, update_db)
