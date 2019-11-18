@@ -49,5 +49,12 @@ class Database:
         return self.cursor.fetchone()
 
     def query(self, sql, params=None):
-        self.cursor.execute(sql, params or ())
-        return self.fetchall()
+        retries = 3
+        while retries > 0:
+            retries = retries - 1
+            try:
+                self.cursor.execute(sql, params or ())
+                return self.fetchall()
+            except:
+                continue
+        raise("Database in the middle of an update, please retry the command")

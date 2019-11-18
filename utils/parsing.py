@@ -30,7 +30,10 @@ def convert_ISO_date_to_string(d):
 
 
 def convert_args_to_dict(args):
-    lexer = shlex(args, posix=True)
-    lexer.whitespace = ' '
-    lexer.wordchars += '='
-    return dict(word.split('=', maxsplit=1) for word in lexer)
+    try:
+        lexer = shlex(args, posix=True)
+        lexer.whitespace = ' '
+        lexer.wordchars += '='
+        return dict(word.split('=', maxsplit=1) for word in lexer)
+    except:
+        raise Exception("Invalid input. Must be in key=value format")
