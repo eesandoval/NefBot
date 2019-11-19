@@ -100,7 +100,7 @@ For help with any additional commands, please see the help menu using the below 
 
 ## Instructions 
 1. If not installed, download [Python 3.6 or higher](https://www.python.org) 
-2. Once installed, open a command prompt window or terminal window and type the following to install [discord.py](https://github.com/Rapptz/discord.py) and [schedule](https://github.com/dbader/schedule):
+2. Once installed, open a command prompt window or terminal window and type the following to install [discord.py](https://github.com/Rapptz/discord.py) and [schedule](https://github.com/dbader/schedule) (Note: [discord.py](https://github.com/Rapptz/discord.py) v.1.2.5 or higher is needed as this addresses a bug that crashes the bot when adding reactions):
 ```
 python -m pip install -U discord.py
 python -m pip install schedule
