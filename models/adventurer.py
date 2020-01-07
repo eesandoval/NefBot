@@ -98,14 +98,19 @@ class Adventurer:
         self.unittype = result[10].lower()
         self.name = result[11]
         self.limited = result[12]
+        self.manaspiral = result[13]
         return True
 
     def _get_skills(self, db, level=None):
         self.skills = []
-        if level is None:
+        if level is None or level > 3:
             level = 3
-        result = db.query(Adventurer.skills_query_text,
-                          (level, self.adventurerid,))
+        if level == -1: # Mana spiral
+            result = db.query(Adventurer.mana_spiral_skills_query_text,
+                            (self.adventurerid,))
+        else:
+            result = db.query(Adventurer.skills_query_text,
+                            (level, self.adventurerid,))
         for skill in map(Skill._make, result):
             self.skills.append(skill)
 
@@ -113,6 +118,8 @@ class Adventurer:
         self.abilities = []
         if level is None or level > 2:
             level = 2
+        elif level == -1:
+            level = 3
         result = db.query(Adventurer.abilities_query_text,
                           (self.adventurerid, level,))
         for ability in map(Ability._make, result):
@@ -132,6 +139,7 @@ class Adventurer:
         , UT.Name AS "UnitType"
         , A.Name
         , A.Limited
+        , A.ManaSpiral
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
@@ -154,6 +162,7 @@ class Adventurer:
         , UT.Name AS "UnitType"
         , A.Name
         , A.Limited
+        , A.ManaSpiral
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
@@ -169,6 +178,16 @@ class Adventurer:
         WHEN 2 THEN S.DescriptionLevel2
         ELSE IFNULL(S.DescriptionLevel3, S.DescriptionLevel2)
         END AS Description
+        , S.SPCost
+        , S.FrameTime
+        , S.Regen
+    FROM AdventurerSkillS Ads
+        INNER JOIN Skills S ON S.SKillID = Ads.SkillID
+    WHERE Ads.AdventurerID = ?
+    '''
+    mana_spiral_skills_query_text = '''
+    SELECT S.Name
+        , ManaSpiral AS Description
         , S.SPCost
         , S.FrameTime
         , S.Regen
@@ -213,6 +232,7 @@ class Adventurer:
         , UT.Name AS "UnitType"
         , A.Name
         , A.Limited
+        , A.ManaSpiral
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID

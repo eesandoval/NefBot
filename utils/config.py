@@ -74,6 +74,8 @@ class Config:
 
         self.wep_reactions = ["\U0001F508", "\U0001F50A",
                               "\U000023EA", "\U000023E9"]
+                            
+        self.mana_spiral = "\U0001F4E3"
 
     def _set_automatic_updates(self, config):
         if config.has_option("Discord", "AutomaticUpdates"):

@@ -39,6 +39,7 @@ channel = None
 active_messages = {}
 emoji_reactions = {"adv": config.adv_reactions, "wyr": config.wyr_reactions,
                    "dra": config.dra_reactions, "wep": config.wep_reactions}
+mana_spiral_reaction = config.mana_spiral
 client = Bot(command_prefix=config.command_start)
 
 
@@ -80,7 +81,7 @@ def process_weapon_reaction(emoji, wep):
 
 
 def get_level(emoji):
-    levels = {"\U0001F508": 1, "\U0001F509": 2, "\U0001F50A": 3}
+    levels = {"\U0001F508": 1, "\U0001F509": 2, "\U0001F50A": 3, mana_spiral_reaction: -1}
     if emoji not in levels:
         return 1
     return levels[emoji]
@@ -304,6 +305,10 @@ async def on_ready():
 @client.event
 async def display_embed(embed, embed_type, dynamic, ctx=None, message=None):
     reaction_list = emoji_reactions[embed_type]
+     # Should probably clean-up the DB to do this better
+    if embed_type == "adv" and dynamic.manaspiral == 1:
+        print(dynamic.manaspiral)
+        reaction_list.append(mana_spiral_reaction)
 
     def check(reaction, user):
         return user != client.user and reaction.message.id == message.id
