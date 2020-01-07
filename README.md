@@ -54,6 +54,10 @@ The next speaker will denote 2 unbinds for Adventurers and Wyrmprints. For Drago
 
 The final speaker denotes a max unbind for Adventurers and Wyrmprints. Note that when speaking of unbind levels on Adventurers, it refers to their skill and ability levels (where MUB = max skills and max abilities, 2UB = level 2 skills and max abilites, and 0UB = level 1 skills and level 1 abilities)
 
+<img src="https://i.imgur.com/HjrkiU9.png" width="400">
+
+The megaphone is a special reaction reserved for mana spiral. Only select adventurers can be mana spiralled, and when they can be upgraded like this in the game, then the icon will appear and show their final abilities/skills when clicked.
+
 ### Full Images
 <img src="https://i.imgur.com/uVHnuFG.png" width="400">
 
