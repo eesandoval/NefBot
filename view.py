@@ -304,10 +304,10 @@ async def on_ready():
 
 @client.event
 async def display_embed(embed, embed_type, dynamic, ctx=None, message=None):
-    reaction_list = emoji_reactions[embed_type]
+    # Fix where the mana_spiral_reaction was added to the adv_reactions list
+    reaction_list = [reaction for reaction in emoji_reactions[embed_type]]
      # Should probably clean-up the DB to do this better
     if embed_type == "adv" and dynamic.manaspiral == 1:
-        print(dynamic.manaspiral)
         reaction_list.append(mana_spiral_reaction)
 
     def check(reaction, user):
