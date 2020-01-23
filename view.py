@@ -321,7 +321,8 @@ async def display_embed(embed, embed_type, dynamic, ctx=None, message=None):
     else:
         await message.edit(embed=embed)
     try:
-        reaction, user = await client.wait_for("reaction_add", timeout=60.0,
+        reaction, user = await client.wait_for("reaction_add",
+                                               timeout=config.message_timeout,
                                                check=check)
         await message.remove_reaction(reaction, user)
         embed = reaction_functions[embed_type](reaction.emoji, dynamic)

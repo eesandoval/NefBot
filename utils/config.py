@@ -50,6 +50,7 @@ class Config:
                                    for x in config["Discord"]["AuthorizedIds"]
                                    .split(',')]
         self.streaming = config.getboolean("Discord", "Streaming")
+        self.message_timeout = config.getint("Discord", "MessageTimeout")
         self.message_limit = config.getint("Discord", "MessageLimit")
         self.limited_emoji = config["OtherEmojis"]["Limited"]
         self.eldwater_emoji = config["OtherEmojis"]["Eldwater"]
