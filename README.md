@@ -118,10 +118,25 @@ python -m pip install schedule
 9. Copy the token from the bot page
 10. Copy the example config file and rename it: config_example.ini -> config.ini
 11. Set the TOKEN parameter in the config.ini file 
-12. Optional: Set additional parameters in the config.ini as desired
+12. Optional: Set additional parameters in the config.ini as desired (see below)
 13. Run the bot using the following command in the command prompt or terminal 
 ```
 python main.py
+```
+
+## Setting Up Emojis
+Emojis are disabled by default in the configuration file. To enable them, a server must exist where the bot can use these emojis (bot must be added to this server). They can be added in the following way:
+1. Locate the [assets](https://github.com/eesandoval/NefBot/tree/master/assets) folder from the project
+2. In Discord, have a server where the bot exists (note you can use your current server, but for easier use a new server is recommended as we will populate it with custom emojis for the bot to use)
+3. Upload the pictures in the assets folder as emojis on the server (Server Settings -> Emoji -> Upload Emoji)
+4. For each emoji uploaded, generate the unique Discord emoji ID by typing the following in the server (where emoji name is the name of the emoji):
+```
+\:emoji_name:
+```
+5. Take the emoji token (such as <:rarity_2:585203204514381855>) and paste it to the relevant field in the config file (for example, the above token would go to the 2 line in the config file under RarityEmojis)
+6. Restart the bot or type 
+```
+^update
 ```
 
 # Issues

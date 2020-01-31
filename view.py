@@ -472,7 +472,8 @@ def create_weapon_embed(wep):
                     value=skill.description,
                     inline=False)
     for ability in wep.abilities:
-        e.add_field(name=ability_format.format(ability.name),
+        e.add_field(name=ability_format.format(ability.name) +
+                    get_emoji_limited(ability.limited),
                     value=ability.description,
                     inline=False)
     return e
