@@ -101,7 +101,7 @@ reaction_functions = {"adv": process_adventurers_reaction,
                 aliases=["shutdown", "quit", "close"])
 async def exit(ctx):
     ctx.typing()
-    if (config.authorized_ids == [] or
+    if (config.authorized_updates is False or config.authorized_ids == [] or
             ctx.message.author.id in config.authorized_ids):
         await ctx.send("Shutting down")
         for _, msg in active_messages.items():
@@ -203,8 +203,9 @@ async def _get_weapon(ctx, name):
                 description='''
                 Queries the database for adventurers, dragons, or
                 wyrmprints with the given criteria. Criteria is set as
-                pairs. See example below:
-                {0}query type=adv ability="Burn Res +100%"
+                pairs. Valid values include rarity, element, weapon,
+                skill, ability, and lookback (in days) See example below:
+                {0}query ability="Burn Res +100%"
                 '''.format(config.command_start),
                 brief="Queries for any adventurer, print, or dragon",
                 aliases=["que", "q"])

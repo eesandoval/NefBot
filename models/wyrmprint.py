@@ -27,7 +27,7 @@ from models.ability import Ability
 
 class Wyrmprint:
     @staticmethod
-    def find_wyrmprints(ability=None, rarity=None, level=3):
+    def find_wyrmprints(ability=None, rarity=None, level=3, lookback=None):
         wyrmprints = []
         params = ()
         full_query = Wyrmprint.wyrmprint_search_query_text
@@ -40,6 +40,9 @@ class Wyrmprint:
         if level is not None:
             full_query += "AND WA.level = ? "
             params += (level,)
+        if lookback is not None:
+            full_query += "AND W.ReleaseDate >= ? "
+            params += (lookback,)
         if len(params) == 0:
             return wyrmprints
         with Database("master.db") as db:

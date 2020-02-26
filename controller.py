@@ -34,6 +34,7 @@ from models.events import Event
 from models.database import Database
 from utils.config import Config
 from view import start_discord_bot
+from datetime import datetime, timedelta
 
 config = Config("config.ini")
 
@@ -68,6 +69,7 @@ def query_adventurers(criteria):
     skill = None
     ability = None
     rarity = None
+    lookback = None
     if "element" in criteria:
         element = criteria["element"]
     if "weapon" in criteria:
@@ -78,15 +80,18 @@ def query_adventurers(criteria):
         ability = criteria["ability"]
     if "rarity" in criteria:
         rarity = criteria["rarity"]
+    if "lookback" in criteria:
+        lookback = datetime.today() - timedelta(days=int(criteria["lookback"]))
     if (element is None and skill is None and weapon is None and
-            ability is None and rarity is None):
+            ability is None and rarity is None and lookback is None):
         return []
-    return Adventurer.find_adventurers(element, weapon, skill, ability, rarity)
+    return Adventurer.find_adventurers(element, weapon, skill, ability, rarity, lookback)
 
 
 def query_wyrmprints(criteria):
     ability = None
     rarity = None
+    lookback = None
     level = 3
     if "ability" in criteria:
         ability = criteria["ability"]
@@ -94,9 +99,11 @@ def query_wyrmprints(criteria):
         rarity = criteria["rarity"]
     if "level" in criteria:
         level = criteria["level"]
-    if ability is None and rarity is None:
+    if "lookback" in criteria:
+        lookback = datetime.today() - timedelta(days=int(criteria["lookback"]))
+    if ability is None and rarity is None and lookback is None:
         return []
-    return Wyrmprint.find_wyrmprints(ability, rarity, level)
+    return Wyrmprint.find_wyrmprints(ability, rarity, level, lookback)
 
 
 def query_dragons(criteria):
@@ -104,6 +111,7 @@ def query_dragons(criteria):
     skill = None
     ability = None
     rarity = None
+    lookback = None
     level = 2
     if "element" in criteria:
         element = criteria["element"]
@@ -115,10 +123,12 @@ def query_dragons(criteria):
         rarity = criteria["rarity"]
     if "level" in criteria:
         level = criteria["level"]
+    if "lookback" in criteria:
+        lookback = datetime.today() - timedelta(days=int(criteria["lookback"]))
     if (element is None and skill is None and ability is None and
-            rarity is None):
+            rarity is None and lookback is None):
         return []
-    return Dragon.find_dragons(element, skill, ability, rarity, level)
+    return Dragon.find_dragons(element, skill, ability, rarity, level, lookback)
 
 
 def query_weapons(criteria):
@@ -127,6 +137,7 @@ def query_weapons(criteria):
     skill = None
     ability = None
     rarity = None
+    lookback = None
     if "element" in criteria:
         element = criteria["element"]
     if "weapon" in criteria:
@@ -137,10 +148,12 @@ def query_weapons(criteria):
         ability = criteria["ability"]
     if "rarity" in criteria:
         rarity = criteria["rarity"]
+    if "lookback" in criteria:
+        lookback = datetime.today() - timedelta(days=int(criteria["lookback"]))
     if (element is None and skill is None and weapon is None and
-            ability is None and rarity is None):
+            ability is None and rarity is None and lookback is None):
         return []
-    return Weapon.find_weapons(element, weapon, skill, ability, rarity)
+    return Weapon.find_weapons(element, weapon, skill, ability, rarity, lookback)
 
 
 def process_adventurer(name, level=None):
