@@ -29,7 +29,7 @@ from models.skill import Skill
 class Adventurer:
     @staticmethod
     def find_adventurers(element=None, weapon=None, skill=None, ability=None,
-                         rarity=None):
+                         rarity=None, lookback=None):
         adventurers = []
         params = ()
         full_query = Adventurer.adventurer_search_query_text
@@ -48,6 +48,9 @@ class Adventurer:
         if rarity is not None:
             full_query += "AND A.rarity >= ? "
             params += (rarity,)
+        if lookback is not None:
+            full_query += "AND A.ReleaseDate >= ? "
+            params += (lookback,)
         if len(params) == 0:
             return adventurers
         with Database("master.db") as db:

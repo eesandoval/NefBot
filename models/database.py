@@ -50,11 +50,13 @@ class Database:
 
     def query(self, sql, params=None):
         retries = 3
+        exception_thrown = None
         while retries > 0:
             retries = retries - 1
             try:
                 self.cursor.execute(sql, params or ())
                 return self.fetchall()
-            except:
+            except Exception as e:
+                exception_thrown = e
                 continue
-        raise("Database in the middle of an update, please retry the command")
+        raise exception_thrown

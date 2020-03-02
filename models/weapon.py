@@ -29,7 +29,7 @@ from models.ability import Ability
 class Weapon:
     @staticmethod
     def find_weapons(element=None, weapon=None, skill=None, ability=None,
-                     rarity=None):
+                     rarity=None, lookback=None):
         weapons = []
         params = ()
         full_query = Weapon.weapon_search_query_text
@@ -48,6 +48,9 @@ class Weapon:
         if rarity is not None:
             full_query += "AND W.rarity >= ? "
             params += (rarity,)
+        if lookback is not None:
+            full_query += "AND W.ReleaseDate >= ? "
+            params += (lookback,)
         if len(params) == 0:
             return weapons
         with Database("master.db") as db:
