@@ -51,7 +51,12 @@ def start_discord_bot():
 def process_adventurers_reaction(emoji, adv):
     if emoji == "\U0001F5BC":  # Full picture
         return create_dynamic_portrait_embed(adv, "adventurers/full")
-    adv = controller.process_adventurer(adv.name, get_level(emoji))
+    # Fixes an issue where non-spiralled units could get a megaphone reaction
+    if adv.manaspiral == 1:
+        level = get_level(emoji, True)
+    else:
+        level = get_level(emoji)
+    adv = controller.process_adventurer(adv.name, level)
     return create_adventurer_embed(adv)
 
 
@@ -80,9 +85,12 @@ def process_weapon_reaction(emoji, wep):
     return create_weapon_embed(wep)
 
 
-def get_level(emoji):
+def get_level(emoji, mana_spiral_valid = False):
     levels = {"\U0001F508": 1, "\U0001F509": 2, "\U0001F50A": 3, mana_spiral_reaction: -1}
     if emoji not in levels:
+        return 1
+    # Fixes an issue where non-spiralled units would crash if given a megaphone by a user
+    if levels[emoji] == -1 and not mana_spiral_valid:
         return 1
     return levels[emoji]
 
