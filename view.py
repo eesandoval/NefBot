@@ -276,11 +276,16 @@ async def update(ctx):
                 ''',
                 brief="Creates a new alias to search by")
 async def alias(ctx, alias_text, aliased_name=None):
-    try:
-        alias_result = controller.handle_alias(alias_text, aliased_name)
-        await ctx.send(alias_result)
-    except Exception as e:
-        await show_exception(ctx, e)
+    if (not(config.authorized_aliases) or
+        config.authorized_ids == [] or
+        ctx.message.author.id in config.authorized_ids):
+        try:
+            alias_result = controller.handle_alias(alias_text, aliased_name)
+            await ctx.send(alias_result)
+        except Exception as e:
+            await show_exception(ctx, e)
+    else:
+        await ctx.send("User is not authorized to create/update/delete aliases")
 
 
 @client.command(name="events",

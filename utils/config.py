@@ -59,6 +59,7 @@ class Config:
         self.authorized_updates = config.getboolean("Discord",
                                                     "AuthorizedUpdates")
         self._set_automatic_updates(config)
+        self.authorized_aliases = config["Discord"]["AuthorizedAliases"]
 
     def set_config_file(self, config_file):
         project_root = dirname(dirname(__file__))

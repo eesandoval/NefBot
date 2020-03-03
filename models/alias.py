@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 from models.database import Database
+import os
 
 
 create_adventurer_alias_text = '''
@@ -70,6 +71,16 @@ find_alias_text = '''
 
 delete_alias_text = '''
     DELETE FROM Aliases WHERE AliasText = ? COLLATE NOCASE
+'''
+
+dump_aliases_text = '''
+    SELECT AliasText
+        , AdventurerID
+        , WyrmprintID
+        , DragonID
+        , WeaponID
+    FROM Aliases
+    WHERE CustomAlias = 1 
 '''
 
 
@@ -122,3 +133,43 @@ def update_alias(alias_id, text, alias_type, aliased_name):
             result = result.format(text, aliased_name, "Weapon")
             db.execute(update_weapon_alias_text, (alias_id, text,))
     return result
+
+
+def restore_custom_aliases():
+    with open("_custom_aliases.txt", 'r') as f:
+        for line in f.readlines():
+            row = eval(line)
+            text = row[0]
+            if row[1] != None:
+                alias_type = 0
+                alias_id = row[1]
+            elif row[2] != None:
+                alias_type = 1
+                alias_id = row[2]
+            elif row[3] != None:
+                alias_type = 2
+                alias_id = row[3]
+            elif row[4] != None:
+                alias_type = 3
+                alias_id = row[4]
+            else:
+                print("Error Restoring Alias: " + line)
+                continue # Line is in error; notify and move on
+            create_update_alias(alias_id, text, alias_type, "")
+    if os.path.isfile("_custom_aliases.txt"):
+        os.remove("_custom_aliases.txt")
+        
+
+def dump_custom_aliases():
+    result = None
+    try:
+        with Database("master.db") as db:
+            result = db.query(dump_aliases_text)
+    except:
+        # DB does not have CustomAlias column yet (update will retrieve)
+        return 
+    if result is None or len(result) == 0:
+        return
+    with open("_custom_aliases.txt", 'w') as f:
+        for row in result:
+            f.write("{0}\n".format(row))

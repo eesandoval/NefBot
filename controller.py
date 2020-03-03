@@ -30,6 +30,7 @@ from models.wyrmprint import Wyrmprint
 from models.dragon import Dragon
 from models.weapon import Weapon
 from models.alias import create_update_alias, delete_alias
+from models.alias import dump_custom_aliases, restore_custom_aliases
 from models.events import Event
 from models.database import Database
 from utils.config import Config
@@ -201,13 +202,15 @@ def handle_current_events():
 
 
 def handle_update():
-    print("UPDATING")
+    # print("UPDATING")
+    dump_custom_aliases()
     url = config.picture_server + "database/master.db"
     urllib.request.urlretrieve(url, "master.db")
+    restore_custom_aliases()
 
 
 def continous_updates(event_thread):
-    schedule.every(1).minute.do(handle_update)
+    schedule.every(24).hour.do(handle_update)
     while (not event_thread.is_set()):
         schedule.run_pending()
         time.sleep(1)
