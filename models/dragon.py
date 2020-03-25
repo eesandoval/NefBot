@@ -29,7 +29,7 @@ from models.ability import Ability
 class Dragon:
     @staticmethod
     def find_dragons(element=None, skill=None, ability=None, rarity=None,
-                     level=2):
+                     level=2, lookback=None):
         dragons = []
         params = ()
         full_query = Dragon.dragon_search_query_text
@@ -48,6 +48,9 @@ class Dragon:
         if level is not None:
             full_query += "AND DA.level = ? "
             params += (level,)
+        if lookback is not None:
+            full_query += "AND D.ReleaseDate >= ? "
+            params += (lookback,)
         if len(params) == 0:
             return dragons
         with Database("master.db") as db:
