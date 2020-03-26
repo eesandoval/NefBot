@@ -51,7 +51,12 @@ def start_discord_bot():
 def process_adventurers_reaction(emoji, adv):
     if emoji == "\U0001F5BC":  # Full picture
         return create_dynamic_portrait_embed(adv, "adventurers/full")
-    adv = controller.process_adventurer(adv.name, get_level(emoji))
+    # Fixes an issue where non-spiralled units could get a megaphone reaction
+    if adv.manaspiral == 1:
+        level = get_level(emoji, True)
+    else:
+        level = get_level(emoji)
+    adv = controller.process_adventurer(adv.name, level)
     return create_adventurer_embed(adv)
 
 
@@ -80,9 +85,12 @@ def process_weapon_reaction(emoji, wep):
     return create_weapon_embed(wep)
 
 
-def get_level(emoji):
+def get_level(emoji, mana_spiral_valid = False):
     levels = {"\U0001F508": 1, "\U0001F509": 2, "\U0001F50A": 3, mana_spiral_reaction: -1}
     if emoji not in levels:
+        return 1
+    # Fixes an issue where non-spiralled units would crash if given a megaphone by a user
+    if levels[emoji] == -1 and not mana_spiral_valid:
         return 1
     return levels[emoji]
 
@@ -101,7 +109,7 @@ reaction_functions = {"adv": process_adventurers_reaction,
                 aliases=["shutdown", "quit", "close"])
 async def exit(ctx):
     ctx.typing()
-    if (config.authorized_ids == [] or
+    if (config.authorized_updates is False or config.authorized_ids == [] or
             ctx.message.author.id in config.authorized_ids):
         await ctx.send("Shutting down")
         for _, msg in active_messages.items():
@@ -203,8 +211,9 @@ async def _get_weapon(ctx, name):
                 description='''
                 Queries the database for adventurers, dragons, or
                 wyrmprints with the given criteria. Criteria is set as
-                pairs. See example below:
-                {0}query type=adv ability="Burn Res +100%"
+                pairs. Valid values include rarity, element, weapon,
+                skill, ability, and lookback (in days) See example below:
+                {0}query ability="Burn Res +100%"
                 '''.format(config.command_start),
                 brief="Queries for any adventurer, print, or dragon",
                 aliases=["que", "q"])
@@ -322,7 +331,7 @@ async def display_embed(embed, embed_type, dynamic, ctx=None, message=None):
         await message.edit(embed=embed)
     try:
         reaction, user = await client.wait_for("reaction_add",
-                                               timeout=config.message_timeout,
+                                               timeout=600,
                                                check=check)
         await message.remove_reaction(reaction, user)
         embed = reaction_functions[embed_type](reaction.emoji, dynamic)
@@ -359,8 +368,8 @@ def create_adventurer_embed(adv):
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
     e.add_field(name=get_emoji_rarity(adv.rarity),
-                value="**HP** {0}\n**STR** {1}\n**DEF** {2}\n**Co-Op** {3}"
-                .format(adv.maxhp, adv.maxstr, adv.defense, adv.maxcoop),
+                value="**HP:** {0}\n**Strength:** {1}\n**Defense:** {2}\n**Co-Ability:** {3}\n**Chain:** {4}"
+                .format(adv.maxhp, adv.maxstr, adv.defense, adv.maxcoop, adv.maxchaincoop),
                 inline=True)
     e.add_field(name=get_emoji_element(adv.elementtype) +
                 get_emoji_weapon(adv.weapontype) +
@@ -472,7 +481,8 @@ def create_weapon_embed(wep):
                     value=skill.description,
                     inline=False)
     for ability in wep.abilities:
-        e.add_field(name=ability_format.format(ability.name),
+        e.add_field(name=ability_format.format(ability.name) +
+                    get_emoji_limited(ability.limited),
                     value=ability.description,
                     inline=False)
     return e

@@ -29,7 +29,7 @@ from models.skill import Skill
 class Adventurer:
     @staticmethod
     def find_adventurers(element=None, weapon=None, skill=None, ability=None,
-                         rarity=None, lookback=None):
+                         rarity=None):
         adventurers = []
         params = ()
         full_query = Adventurer.adventurer_search_query_text
@@ -48,9 +48,6 @@ class Adventurer:
         if rarity is not None:
             full_query += "AND A.rarity >= ? "
             params += (rarity,)
-        if lookback is not None:
-            full_query += "AND A.ReleaseDate >= ? "
-            params += (lookback,)
         if len(params) == 0:
             return adventurers
         with Database("master.db") as db:
@@ -102,6 +99,7 @@ class Adventurer:
         self.name = result[11]
         self.limited = result[12]
         self.manaspiral = result[13]
+        self.maxchaincoop = result[14]
         return True
 
     def _get_skills(self, db, level=None):
@@ -143,6 +141,7 @@ class Adventurer:
         , A.Name
         , A.Limited
         , A.ManaSpiral
+        , A.MaxChainCoOp
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
@@ -166,6 +165,7 @@ class Adventurer:
         , A.Name
         , A.Limited
         , A.ManaSpiral
+        , A.MaxChainCoOp
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
@@ -236,6 +236,7 @@ class Adventurer:
         , A.Name
         , A.Limited
         , A.ManaSpiral
+        , A.MaxChainCoOp
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
