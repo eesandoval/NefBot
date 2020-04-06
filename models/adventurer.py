@@ -102,6 +102,7 @@ class Adventurer:
         self.name = result[11]
         self.limited = result[12]
         self.manaspiral = result[13]
+        self.maxchaincoop = result[14]
         return True
 
     def _get_skills(self, db, level=None):
@@ -143,6 +144,7 @@ class Adventurer:
         , A.Name
         , A.Limited
         , A.ManaSpiral
+        , A.MaxChainCoOp
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
@@ -166,6 +168,7 @@ class Adventurer:
         , A.Name
         , A.Limited
         , A.ManaSpiral
+        , A.MaxChainCoOp
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID
@@ -236,6 +239,7 @@ class Adventurer:
         , A.Name
         , A.Limited
         , A.ManaSpiral
+        , A.MaxChainCoOp
     FROM Adventurers A
         INNER JOIN ElementTypes ET ON ET.ElementTypeID = A.ElementTypeID
         INNER JOIN WeaponTypes WT ON WT.WeaponTypeID = A.WeaponTypeID

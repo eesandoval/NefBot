@@ -331,7 +331,7 @@ async def display_embed(embed, embed_type, dynamic, ctx=None, message=None):
         await message.edit(embed=embed)
     try:
         reaction, user = await client.wait_for("reaction_add",
-                                               timeout=config.message_timeout,
+                                               timeout=600,
                                                check=check)
         await message.remove_reaction(reaction, user)
         embed = reaction_functions[embed_type](reaction.emoji, dynamic)
@@ -368,8 +368,8 @@ def create_adventurer_embed(adv):
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
     e.add_field(name=get_emoji_rarity(adv.rarity),
-                value="**HP** {0}\n**STR** {1}\n**DEF** {2}\n**Co-Op** {3}"
-                .format(adv.maxhp, adv.maxstr, adv.defense, adv.maxcoop),
+                value="**HP:** {0}\n**Strength:** {1}\n**Defense:** {2}\n**Co-Ability:** {3}\n**Chain:** {4}"
+                .format(adv.maxhp, adv.maxstr, adv.defense, adv.maxcoop, adv.maxchaincoop),
                 inline=True)
     e.add_field(name=get_emoji_element(adv.elementtype) +
                 get_emoji_weapon(adv.weapontype) +
