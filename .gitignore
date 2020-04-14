@@ -9,3 +9,4 @@ updates/wyrmprints/
 updates/weapons/
 updates/database/
 _custom_aliases.txt
+.pytest_cache/

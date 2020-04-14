@@ -368,15 +368,15 @@ def create_adventurer_embed(adv):
     portrait_URL = config.picture_server + sub_portrait_URL
     e.set_thumbnail(url=portrait_URL)
     e.add_field(name=get_emoji_rarity(adv.rarity),
-                value="**HP:** {0}\n**Strength:** {1}\n**Defense:** {2}\n**Co-Ability:** {3}\n**Chain:** {4}"
-                .format(adv.maxhp, adv.maxstr, adv.defense, adv.maxcoop, adv.maxchaincoop),
+                value="**HP:** {0}\n**Strength:** {1}\n**Defense:** {2}\n**Co-Ability\n** {3}"
+                .format(adv.maxhp, adv.maxstr, adv.defense, adv.maxcoop),
                 inline=True)
     e.add_field(name=get_emoji_element(adv.elementtype) +
                 get_emoji_weapon(adv.weapontype) +
                 get_emoji_unit(adv.unittype) +
                 get_emoji_limited(adv.limited),
-                value="**Released**\n{0}"
-                .format(convert_ISO_date_to_string(adv.releasedate)),
+                value="**Released**\n{0}\n\n**Chain\n** {1}"
+                .format(convert_ISO_date_to_string(adv.releasedate), adv.maxchaincoop),
                 inline=True)
     regen_format = " [SP Regen: {0} per second]"
     ability_format = "Ability: {0}"
